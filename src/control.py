@@ -6,7 +6,7 @@ Created on Jan 25 17:53 2019
 
 import os
 
-class Data_source:
+class Data_output:
 
 
     def execute(self, connection, command_to_execute):
@@ -34,7 +34,7 @@ class Data_source:
         }
         if "id" in self.command_to_execute:
             id = self.command_to_execute["id"]
-            endpoint = "v1/data_source/file/" + id
+            endpoint = "v1/control/file/" + id
             self.connection.send_request("GET",endpoint,payload, headers)
         else:
             endpoint = "v1/data_source"
@@ -50,16 +50,17 @@ class Data_source:
                 'Content-Type': "application/json",
                 'cache-control': "no-cache"
             }
-            endpoint = "v1/data_source/"+id
+            endpoint = "v1/control/"+id
             self.connection.send_request("DELETE", endpoint, payload, headers)
         else:
             payload = ""
             headers = {
+                'Content-Type': "application/json",
                 'cache-control': "no-cache"
             }
-            endpoint= "v1/data_source/file/" + id
+            endpoint= "v1/control/file/" + id
             self.connection.send_request("DELETE", endpoint, payload, headers)
-            endpoint = "v1/data_source/mqtt/" + id
+            endpoint = "v1/control/mqtt/" + id
             self.connection.send_request("DELETE", endpoint, payload, headers)
 
 
@@ -75,8 +76,7 @@ class Data_source:
         payload=""
         with open(filepath,"r") as myfile:
             payload=myfile.read()
-        print("payload type "+str(type(payload)))
-        print(payload)
+
         headers = {
             'Content-Type': "application/json",
             'cache-control': "no-cache"
@@ -84,15 +84,8 @@ class Data_source:
 
         if "id" in self.command_to_execute:
             id = self.command_to_execute["id"]
-            endpoint = "v1/data_source/mqtt/"+id
+            endpoint = "v1/control/mqtt/"+id
             self.connection.send_request("PUT", endpoint, payload, headers)
         else:
-            if "mqtt" in payload:
-                print("mqtt")
-                endpoint = "v1/data_source/mqtt"
-                self.connection.send_request("POST", endpoint, payload, headers)
-            else:
-                print("file")
-                endpoint = "v1/data_source/file"
-                self.connection.send_request("POST", endpoint, payload, headers)
+            print("Id is missing as parameter")
 
