@@ -10,6 +10,8 @@ from src.data_source import Data_source
 from src.control import Data_output
 from src.command import Command
 from src.http import Http
+from src.help import Help
+import optparse
 
 """
 ~$variable = that variable is not necessary. if present than put api, otherwise post api 
@@ -39,19 +41,15 @@ def split_and_add_args(index):
             arg = sys.argv[index + i]
             command_to_execute[v] = arg
 
-def help_text():
-    help={}
-    help["commands"]=str(commands)
-    help["other_commands"]=other_commands
-    return help
+
 
 if __name__ == '__main__':
     """
         format:
         api_category command_name required args 
         eg:
-        data_source -add file file_path      - for post
-        data_source -add file file_path id   - for put
+        data_source -add file_path      - for post
+        data_source -add file_path id   - for put
     """
     number_of_args = len(sys.argv)
     print("number of args: "+str(len(sys.argv)))
@@ -67,8 +65,9 @@ if __name__ == '__main__':
     category_position_host = 0
     category_position_port = 0
 
+    #checking if the --help option was used
     for name in sys.argv:
-        if "-help" in name:
+        if "--help" in name:
             help=True
             break
         for key in other_commands.keys():
@@ -77,7 +76,7 @@ if __name__ == '__main__':
         counter += 1
 
     if help:
-        print(help_text())
+        Help.help_text()
         sys.exit(0)
 
     for key in other_commands.keys():
