@@ -10,37 +10,163 @@ from src.data_source import Data_source
 from src.control import Data_output
 from src.command import Command
 from src.http import Http
-from src.help import Help
 import optparse
-
-"""
-~$variable = that variable is not necessary. if present than put api, otherwise post api 
-"""
-other_commands={"-host":"hostname","-port":"port"}
-
-api_category = {"command": {"-start":"filepath,id", "-stop":"id", "-status":""}
-, "data_source":{"-add":"filepath,~id", "-delete": "~id", "-list":""}
-, "data_output": {"-add":"filepath,~id", "-list":"id"}
-, "models": {"-add":"filepath,model_name","-delete":"~model_name", "-list":""}}
-
-commands={"add", "delete", "list", "start", "stop"}
+import logging, os
 
 
 
-def split_and_add_args(index):
-    global args, i, v, arg
-    args = value.split(",")
-    for i in range(len(args)):
-        v = args[i]
-        if "~" not in v and index + i >= number_of_args:
-            print("incomplete data " + str(v) + " not present")
+logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
+logger = logging.getLogger(__file__)
+
+
+
+def vararg_callback_1(option, opt_str, value, parser):
+    assert value is None
+    value = []
+
+    def floatable(str):
+        try:
+            float(str)
+            return True
+        except ValueError:
+            return False
+    counter=0
+    for arg in parser.rargs:
+        # stop on --foo like options
+        if arg[:2] == "--" and len(arg) > 2:
+            break
+        # stop on -a, but not on -3 or -3.0
+        if arg[:1] == "-" and len(arg) > 1 and not floatable(arg):
+            break
+
+        if counter > 0:
+            logger.error("Too many parameters for stop")
             sys.exit(0)
-        if "~" in v:
-            v = v[1:]
-        if index + i < number_of_args:
-            arg = sys.argv[index + i]
-            command_to_execute[v] = arg
+        counter += 1
+        value.append(arg)
 
+    del parser.rargs[:len(value)]
+    setattr(parser.values, option.dest, value)
+
+def vararg_callback(option, opt_str, value, parser):
+    assert value is None
+    value = []
+
+    def floatable(str):
+        try:
+            float(str)
+            return True
+        except ValueError:
+            return False
+    counter=0
+    for arg in parser.rargs:
+        # stop on --foo like options
+        if arg[:2] == "--" and len(arg) > 2:
+            break
+        # stop on -a, but not on -3 or -3.0
+        if arg[:1] == "-" and len(arg) > 1 and not floatable(arg):
+            break
+
+        if counter > 1:
+            logger.error("Too many options for add")
+            sys.exit(0)
+        counter += 1
+        value.append(arg)
+
+    del parser.rargs[:len(value)]
+    setattr(parser.values, option.dest, value)
+
+def parser():
+    desc = """OFW is an optimization framework that maps inputs and outputs to an optimization model written in pyomo.\t\t\t\t\t\t
+    [1]Start registering a new model. If the model is already available in ofw, you don't have to repeat this step. \t\t\t\t\t\t
+    [2]Second, register your inputs to create an instance. \t\t\t\t\t\t
+    [3]After that you can register your outputs and start/stop ofw"""
+    command_to_execute = {}
+    parser = optparse.OptionParser(usage='Usage: %prog <options> <endpoint> arg1 arg2', version="%prog 1.0", description=desc)
+    parser.add_option('-H', '--host', dest="Host", type="string", help="http host to connect to. Mandatory option.",
+                      metavar='<target host>', action="store")
+    parser.add_option('-P', '--port', dest="Port", type="string", help="Network port to connect to. Default 8080",
+                      metavar='<target port>', action="store")
+
+
+    ###defining groups and adding data to them
+    #######################################################################################
+    ###################     command             ############################################
+    command_group = optparse.OptionGroup(parser, "Endpoint command")
+
+    command_group.add_option("--start", help="<filepath> <id>   starts the optimnization. If id is not present takes the last id used. Write all to start all instances", dest="start", metavar='<filepath> <id>',
+                             action="callback",callback=vararg_callback)
+    # command_group.add_option("--start",help="starts the optimnization",dest="start",metavar='<filepath> <id>', nargs=2, action="store")
+    command_group.add_option("--stop", help="<id>  stops the optimnization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
+                             metavar='<id>', action="callback", callback=vararg_callback_1)
+    command_group.add_option("--status", help="receives the status of the optimnization", dest="status", action="store_true")
+
+    #######################################################################################
+    ###################     INPUT              ############################################
+
+    data_source_group = optparse.OptionGroup(parser, "Endpoint input")
+
+    data_source_group.add_option("--input_add", help="<filepath> <id>   registers a data source. If id is not present takes the last id used. The first time you don't need to enter any id", dest="ds_add",
+                                 metavar='<filepath> <id>', action="callback", callback=vararg_callback)
+    # data_source_group.add_option("--data_source add", help="registry a data source", dest="ds_add", metavar='<filepath> <id>', nargs=2, action="store")
+    data_source_group.add_option("--input_list", help="<id>   gets the registry with the respective id. If id is not present takes the last id used. Write all to have a list of all registered inputs", dest="ds_list",
+                                 metavar='<id>', action="callback", callback=vararg_callback_1)
+    data_source_group.add_option("--input_delete", help="<id>   deletes the registry with the respective id. If id is not present takes the last id used. Write all to delete all registered inputs", dest="ds_delete",
+                                 metavar='<id>', action="callback", callback=vararg_callback_1)
+
+    #######################################################################################
+    ###################     OUTPUT              ############################################
+    data_output_group = optparse.OptionGroup(parser, "Endpoint output")
+
+    data_output_group.add_option("--output_add", help="<filepath> <id>   registers a data output. If id is not present takes the last id used", dest="do_add",
+                                 metavar='<filepath> <id>', action="callback", callback=vararg_callback)
+    # data_output_group.add_option("--data_output add", help="registry a data output", dest="do_add",metavar='<filepath> <id>', nargs=2, action="store")
+    data_output_group.add_option("--output_list", help="<id>   gets the registry with the respective id. If id is not present takes the last id used. Write all to have a list of all registered outputs", dest="do_list",
+                                 metavar='<id>', action="callback", callback=vararg_callback_1)
+    data_output_group.add_option("--output_delete", help="<id>   deletes the registry with the respective id. If id is not present takes the last id used.  Write all to delete all registered outputs",
+                                 dest="do_delete", metavar='<id>', action="callback", callback=vararg_callback_1)
+
+    #######################################################################################
+    ###################     MODEL              ############################################
+    models_group = optparse.OptionGroup(parser, "Endpoint model")
+
+    models_group.add_option("--model_add", help="<filepath> <model_name>  registers an optimization model", dest="model_add",
+                            metavar='<filepath> <model_name>', action="callback", callback=vararg_callback)
+    models_group.add_option("--model_list", help="gets the models name stored at ofw", dest="model_list", action="store_true")
+    models_group.add_option("--model_delete", help="deletes an optimization model with the respective id",
+                            dest="model_delete", metavar='<model_name>', action="store")
+
+    parser.add_option_group(models_group)
+    parser.add_option_group(data_source_group)
+    parser.add_option_group(data_output_group)
+    parser.add_option_group(command_group)
+
+    (opts, args) = parser.parse_args()
+
+    #variable assignment
+    tgtHost = opts.Host
+    tgtPort = opts.Port
+    #id=opts.id
+
+    model = {"add":opts.model_add, "list": opts.model_list, "delete": opts.model_delete}
+    data_source = {"add":opts.ds_add, "list": opts.ds_list, "delete": opts.ds_delete}
+    data_output = {"add": opts.do_add, "list": opts.do_list, "delete": opts.do_delete}
+    command={"start":opts.start, "stop":opts.stop, "status":opts.status}
+
+    if (tgtHost == None):
+        logger.error(parser.usage)
+        sys.exit(0)
+    elif (tgtPort == None):
+        tgtPort = "8080"
+
+    command_to_execute["host"] = tgtHost
+    command_to_execute["port"] = tgtPort
+    command_to_execute["model"]= model
+    command_to_execute["data_source"] = data_source
+    command_to_execute["data_output"] = data_output
+    command_to_execute["command"] = command
+
+    return command_to_execute
 
 
 if __name__ == '__main__':
@@ -51,98 +177,36 @@ if __name__ == '__main__':
         data_source -add file_path      - for post
         data_source -add file_path id   - for put
     """
-    number_of_args = len(sys.argv)
-    print("number of args: "+str(len(sys.argv)))
-    if number_of_args < 2:
-        print("please enter a command and args in the command line. Example:\n"
-              "ofw.exe data_source -add file $file_path")
-        sys.exit(0)
+
     command_to_execute = {}
+    command_to_execute=parser()
 
-    #check the position of the host and port name
-    counter = 0
-    help = False
-    category_position_host = 0
-    category_position_port = 0
+    logger.debug("command to execute: "+str(command_to_execute))
+    http = Http(command_to_execute)
+    for key, value in command_to_execute["model"].items():
+        if value is not None:
+            logger.debug("key exists "+str(key))
+            logger.debug("Executing the command model")
+            model = Models()
+            model.execute(http, command_to_execute)
 
-    #checking if the --help option was used
-    for name in sys.argv:
-        if "--help" in name:
-            help=True
-            break
-        for key in other_commands.keys():
-            if key in name:
-                command_to_execute[key]=sys.argv[counter + 1]
-        counter += 1
+    for key, value in command_to_execute["data_source"].items():
+        if value is not None:
+            logger.debug("key exists "+str(key))
+            logger.debug("Executing the command input")
+            data_source = Data_source()
+            data_source.execute(http, command_to_execute)
 
-    if help:
-        Help.help_text()
-        sys.exit(0)
+    for key, value in command_to_execute["data_output"].items():
+        if value is not None:
+            logger.debug("key exists "+str(key))
+            logger.debug("Executing the command output")
+            data_output = Data_output()
+            data_output.execute(http, command_to_execute)
 
-    for key in other_commands.keys():
-        if not command_to_execute[key]:
-            print("No "+str(key)+" present.\n"
-                "try 'ofw --help' for more information")
-            sys.exit(0)
-
-    #Decoding the commands
-    counter=0
-    category_position=1
-    for name in sys.argv:
-        if name in api_category.keys():
-            category_position=counter
-        counter += 1
-
-    category = sys.argv[category_position]
-    print("category: " + str(sys.argv[category_position]))
-    if category not in api_category.keys():
-        print("Please enter the following command categories: " + str(api_category.keys()))
-        sys.exit(0)
-    else:
-        command_to_execute["category"] = category
-        command_name = sys.argv[category_position+1]
-        print("command_name: " + str(sys.argv[category_position+1]))
-        if command_name not in api_category[category].keys():
-            print("Please enter one of the following commands: " + str(api_category[category].keys()))
-            sys.exit(0)
-        else:
-            command_to_execute["command"] = command_name
-            command_dict = api_category[category][command_name]
-            print("number of args: "+str(number_of_args))
-            print("category position: " + str(category_position))
-            if number_of_args > category_position+2:
-                command_line_value = sys.argv[category_position+2]
-                print("command_line_value: " + str(command_line_value))
-                print("command_dict: " + str(api_category[category][command_name]))
-                #command_to_execute[command_name] = command_line_value
-                value = command_dict
-                print("value " + str(type(command_dict)))
-                if isinstance(value, str) and len(value) > 0:
-                    split_and_add_args(category_position + 2)
-            else:
-                if command_to_execute["command"] == "-list":
-                    print("list")
-                else:
-                    print("incorrect values")
-                    print("Please enter the following commands: " + str(api_category[category][command_name]))
-                    sys.exit(0)
-
-    print(command_to_execute)
-    http=Http(command_to_execute)
-    if command_to_execute["category"] == "models":
-        print("Executing the command")
-        model=Models()
-        model.execute(http, command_to_execute)
-    elif command_to_execute["category"] == "data_source":
-        print("Executing the command")
-        data_source=Data_source()
-        data_source.execute(http, command_to_execute)
-    elif command_to_execute["category"] == "data_output":
-        print("Executing the command")
-        data_output=Data_output()
-        data_output.execute(http, command_to_execute)
-    elif command_to_execute["category"] == "command":
-        print("Executing the command")
-        command=Command()
-        command.execute(http, command_to_execute)
-
+    for key, value in command_to_execute["command"].items():
+        if value is not None:
+            logger.debug("key exists "+str(key))
+            logger.debug("Executing the command")
+            command = Command()
+            command.execute(http, command_to_execute)
