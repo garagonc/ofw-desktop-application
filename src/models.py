@@ -5,70 +5,89 @@ Created on Jan 25 17:53 2019
 """
 
 import os
+import logging, os
+import ntpath
+import re
+import json
+
+logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
+logger = logging.getLogger(__file__)
 
 class Models:
 
+    def path_leaf(self, path):
+        head, tail = ntpath.split(path)
+        return tail or ntpath.basename(head)
 
     def execute(self, connection, command_to_execute):
         self.connection=connection
         self.command_to_execute=command_to_execute
 
-        print("command_to_execute" + str(command_to_execute))
-        if command_to_execute["command"] == "-list":
-            self.list()
-        elif command_to_execute["command"] == "-delete":
-            self.delete()
-        elif command_to_execute["command"] == "-add":
-            self.add()
+        for key, value in command_to_execute["model"].items():
+            if value is not None:
+                if key is "list":
+                    self.list()
+                elif key is "delete":
+                    self.delete(value)
+                elif key is "add":
+                    if len(value) == 2:
+                        self.add(str(value[0]),str(value[1]))
+                    else:
+                        filename=self.path_leaf(str(value[0]))
+                        self.add(str(value[0]), filename)
 
 
     def list(self):
         #need to use host
         # curl may not work on windows terminal
-        print("list")
+        logger.debug("list")
         payload = ""
         headers = {
             'cache-control': "no-cache"
         }
-        self.connection.send_request("GET","v1/models",payload, headers)
+        response=self.connection.send_request("GET","v1/models",payload, headers)
+        logger.debug(json.dumps(response, indent=4, sort_keys=True))
 
 
-    def delete(self):
-        print("Delete "+str(self.command_to_execute["model_name"]))
-        model_name=self.command_to_execute["model_name"]
+    def delete(self, model_name):
+        logger.debug("Delete")
+        #model_name=self.command_to_execute["model_name"]
         if "all" in model_name:
             payload = ""
             headers = {
                 'cache-control': "no-cache"
             }
-            self.connection.send_request("DELETE", "v1/models", payload, headers)
+            response=self.connection.send_request("DELETE", "v1/models", payload, headers)
+            logger.debug(json.dumps(response, indent=4, sort_keys=True))
         else:
             payload = ""
             headers = {
                 'cache-control': "no-cache"
             }
             endpoint= "v1/models/" + model_name
-            self.connection.send_request("DELETE", endpoint, payload, headers)
+            response=self.connection.send_request("DELETE", endpoint, payload, headers)
+            logger.debug(json.dumps(response, indent=4, sort_keys=True))
         #if self.command_to_execute[""]
 
 
-    def add(self):
-        print("Add")
-        model_name = self.command_to_execute["model_name"]
-        print("model_name. "+model_name)
-        #project_dir=os.path.dirname(os.path.abspath(__file__))
-        #project_dir="/usr/src/app"
-        #print("dir "+str(project_dir))
-        filepath=self.command_to_execute["filepath"]
-        #data_file = os.path.join(project_dir, filepath)
-        print("path: "+filepath)
-        payload=""
-        with open(filepath,"r") as myfile:
-            payload=myfile.read()
+    def add(self, filepath,model_name ):
+        logger.debug("Add")
 
-        headers = {
-            'cache-control': "no-cache"
-        }
-        endpoint = "v1/models/upload/" + model_name
-        self.connection.send_request("POST", endpoint, payload, headers)
+        try:
+            payload=""
+            with open(filepath,"r") as myfile:
+                payload=myfile.read()
+
+            headers = {
+                'cache-control': "no-cache"
+            }
+
+            model_name=re.sub("\.(.*)","",model_name)
+
+            endpoint = "v1/models/upload/" + model_name
+            logger.debug("model_name: "+str(model_name))
+            response=self.connection.send_request("POST", endpoint, payload, headers)
+            logger.debug(json.dumps(response, indent=4, sort_keys=True))
+        except Exception as e:
+            logger.error(e)
 
