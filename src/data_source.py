@@ -49,15 +49,18 @@ class Data_source:
                         self.delete(None)
                 elif key is "add":
                     if len(value) == 2:
+                        logger.debug("Value 0 "+str(value[0]))
+                        logger.debug("Value 1 " + str(value[1]))
                         self.add(str(value[0]), str(value[1]))
                     else:
+                        logger.debug("Value 0 " + str(value[0]))
                         self.add(str(value[0]))
 
 
     def list(self, id):
         #need to use host
         # curl may not work on windows terminal
-        logger.debug("list data_source")
+        logger.debug("list inputs")
 
         if id is not None:
             payload = ""
@@ -71,11 +74,11 @@ class Data_source:
                 logger.debug("List of the following instances: "+str(id))
                 for element in id:
                     logger.debug("List of "+str(element))
-                    endpoint = "v1/data_source/file/" + element
+                    endpoint = "v1/inputs/dataset/" + element
                     response = self.connection.send_request("GET", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
 
-                    endpoint = "v1/data_source/mqtt/" + element
+                    endpoint = "v1/inputs/mqtt/" + element
                     response = self.connection.send_request("GET", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
 
@@ -84,7 +87,7 @@ class Data_source:
             sys.exit(0)
 
     def delete(self, id):
-        logger.debug("Delete data_source "+str(id))
+        logger.debug("Delete input "+str(id))
         if id is not None:
             payload = ""
 
@@ -100,12 +103,12 @@ class Data_source:
                         logger.debug("List of "+str(element))
                         self.element_to_erase =element
 
-                        endpoint = "v1/data_source/file/" + element
+                        endpoint = "v1/inputs/datasource/" + element
                         response = self.connection.send_request("DELETE", endpoint, payload, headers)
                         logger.debug(json.dumps(response, indent=4, sort_keys=True))
                         self.erase_id(self.id_path,element)
 
-                        endpoint = "v1/data_source/mqtt/" + element
+                        endpoint = "v1/inputs/mqtt/" + element
                         response = self.connection.send_request("DELETE", endpoint, payload, headers)
                         logger.debug(json.dumps(response, indent=4, sort_keys=True))
                         self.erase_id(self.id_path, element)
@@ -120,7 +123,7 @@ class Data_source:
 
 
     def add(self, filepath, id=None):
-        logger.debug("Add data_source")
+        logger.debug("Add inputs")
         #project_dir = os.path.dirname(os.path.abspath(__file__))
 
         #if os.path.isabs(filepath):
@@ -147,27 +150,29 @@ class Data_source:
             logger.debug("id "+id)
             if "mqtt" in payload:
                 logger.debug("mqtt with id")
-                endpoint = "v1/data_source/mqtt/"+str(id)
-                self.connection.send_request("PUT", endpoint, payload, headers)
+                endpoint = "v1/inputs/mqtt/"+str(id)
+                response=self.connection.send_request("PUT", endpoint, payload, headers)
+                logger.debug(json.dumps(response, indent=4, sort_keys=True))
             else:
-                logger.debug("file with id")
-                endpoint = "v1/data_source/file/"+str(id)
-                self.connection.send_request("PUT", endpoint, payload, headers)
+                logger.debug("dataset with id")
+                endpoint = "v1/inputs/dataset/"+str(id)
+                response=self.connection.send_request("PUT", endpoint, payload, headers)
+                logger.debug(json.dumps(response, indent=4, sort_keys=True))
 
         else:
             if "mqtt" in payload:
                 logger.debug("mqtt")
-                endpoint = "v1/data_source/mqtt"
+                endpoint = "v1/inputs/mqtt"
 
             else:
                 logger.debug("file")
-                endpoint = "v1/data_source/file"
+                endpoint = "v1/inputs/dataset"
 
             try:
-                response = self.connection.send_request("POST", endpoint, payload, headers)
-                if response["Data-Source-Id"] is not None:
-                    logger.debug("Id: " + str(response["Data-Source-Id"]))
-                    self.store("id.config",response["Data-Source-Id"])
+                response = self.connection.send_request_add("POST", endpoint, payload, headers)
+                if response is not None:
+                    logger.debug("Id: " + str(response))
+                    self.store("id.config",response)
             except Exception as e:
                 logger.error(e)
                 sys.exit(0)

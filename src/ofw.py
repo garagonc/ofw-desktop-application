@@ -76,6 +76,36 @@ def vararg_callback(option, opt_str, value, parser):
     del parser.rargs[:len(value)]
     setattr(parser.values, option.dest, value)
 
+def vararg_callback_2(option, opt_str, value, parser):
+    assert value is None
+    value = []
+
+    def floatable(str):
+        try:
+            float(str)
+            return True
+        except ValueError:
+            return False
+    counter=0
+    for arg in parser.rargs:
+        # stop on --foo like options
+        if arg[:2] == "--" and len(arg) > 2:
+            break
+        # stop on -a, but not on -3 or -3.0
+        if arg[:1] == "-" and len(arg) > 1 and not floatable(arg):
+            break
+
+        if counter > 2:
+            logger.error("Too many options for add")
+            sys.exit(0)
+        counter += 1
+        value.append(arg)
+
+    del parser.rargs[:len(value)]
+    setattr(parser.values, option.dest, value)
+
+
+
 def parser():
     desc = """OFW is an optimization framework that maps inputs and outputs to an optimization model written in pyomo.\t\t\t\t\t\t
     [1]Start registering a new model. If the model is already available in ofw, you don't have to repeat this step. \t\t\t\t\t\t
@@ -100,6 +130,11 @@ def parser():
     command_group.add_option("--stop", help="<id>  stops the optimnization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
                              metavar='<id>', action="callback", callback=vararg_callback_1)
     command_group.add_option("--status", help="receives the status of the optimnization", dest="status", action="store_true")
+
+    command_group.add_option("--restart",
+                             help="<model_name> <filepath> <id>   stops the running instances and starts the optimnization again. If id is not present takes the last id used. Write all to start all instances",
+                             dest="restart", metavar='<filepath> <id>',
+                             action="callback", callback=vararg_callback_2)
 
     #######################################################################################
     ###################     INPUT              ############################################
@@ -151,7 +186,7 @@ def parser():
     model = {"add":opts.model_add, "list": opts.model_list, "delete": opts.model_delete}
     data_source = {"add":opts.ds_add, "list": opts.ds_list, "delete": opts.ds_delete}
     data_output = {"add": opts.do_add, "list": opts.do_list, "delete": opts.do_delete}
-    command={"start":opts.start, "stop":opts.stop, "status":opts.status}
+    command={"start":opts.start, "stop":opts.stop, "status":opts.status, "restart":opts.restart}
 
     if (tgtHost == None):
         logger.error(parser.usage)

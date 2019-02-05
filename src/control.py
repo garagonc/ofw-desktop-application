@@ -69,15 +69,9 @@ class Data_output:
                 logger.debug("List of the following instances: "+str(id))
                 for element in id:
                     logger.debug("List of "+str(element))
-                    endpoint = "v1/control/file/" + element
+                    endpoint = "v1/outputs/" + element
                     response = self.connection.send_request("GET", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
-            """else:
-                logger.debug("List of the following instance: "+str(id))
-                endpoint = "v1/control/file/" + id
-                response = self.connection.send_request("GET", endpoint, payload, headers)
-                logger.debug(json.dumps(response, indent=4, sort_keys=True))
-            """
         else:
             logger.error("No ids to list")
             sys.exit(0)
@@ -97,11 +91,11 @@ class Data_output:
                 logger.debug("List of the following instances: "+str(id))
                 for element in id:
                     logger.debug("List of "+str(element))
-                    endpoint = "v1/control/file/" + element
+                    endpoint = "v1/outputs/dataset/" + element
                     response = self.connection.send_request("DELETE", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
 
-                    endpoint = "v1/control/mqtt/" + element
+                    endpoint = "v1/outputs/mqtt/" + element
                     response = self.connection.send_request("DELETE", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
                     self.erase_id(self.id_path,element)
@@ -127,7 +121,7 @@ class Data_output:
         if id is not None:
             logger.debug("id found for data_ouput")
             logger.debug("id "+str(id))
-            endpoint = "v1/control/mqtt/"+id[0]
+            endpoint = "v1/outputs/mqtt/"+id[0]
             response=self.connection.send_request("PUT", endpoint, payload, headers)
             logger.debug(json.dumps(response, indent=4, sort_keys=True))
         else:

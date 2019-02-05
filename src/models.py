@@ -47,6 +47,7 @@ class Models:
         }
         response=self.connection.send_request("GET","v1/models",payload, headers)
         logger.debug(json.dumps(response, indent=4, sort_keys=True))
+        return response
 
 
     def delete(self, model_name):
@@ -57,8 +58,15 @@ class Models:
             headers = {
                 'cache-control': "no-cache"
             }
-            response=self.connection.send_request("DELETE", "v1/models", payload, headers)
-            logger.debug(json.dumps(response, indent=4, sort_keys=True))
+            models = self.list()
+            logger.debug("model name: " + str(models["models"]))
+            for name in models["models"]:
+                #logger.debug("model name: "+str(name))
+                for key, value in name.items():
+                    #logger.debug("value: " + str(value))
+                    endpoint = "v1/models/" + value
+                    response=self.connection.send_request("DELETE", endpoint, payload, headers)
+                    logger.debug(json.dumps(response, indent=4, sort_keys=True))
         else:
             payload = ""
             headers = {
@@ -84,9 +92,9 @@ class Models:
 
             model_name=re.sub("\.(.*)","",model_name)
 
-            endpoint = "v1/models/upload/" + model_name
+            endpoint = "v1/models/" + model_name
             logger.debug("model_name: "+str(model_name))
-            response=self.connection.send_request("POST", endpoint, payload, headers)
+            response=self.connection.send_request("PUT", endpoint, payload, headers)
             logger.debug(json.dumps(response, indent=4, sort_keys=True))
         except Exception as e:
             logger.error(e)
