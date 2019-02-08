@@ -15,6 +15,7 @@ logger = logging.getLogger(__file__)
 class Command:
 
     id_path = "id.config"
+    restart_flag=False
 
     def execute(self, connection, command_to_execute):
         self.connection=connection
@@ -23,10 +24,10 @@ class Command:
         for key, value in command_to_execute["command"].items():
             if value is not None:
                 if key is "start":
-                    logger.debug("length: "+str(len(value)))
+                    #logger.debug("length: "+str(len(value)))
                     if len(value) == 2:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all")
+                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
                             if id is not None:
                                 self.start(str(value[0]), id)
                             else:
@@ -34,7 +35,7 @@ class Command:
                         else:
                             self.start(str(value[0]), str(value[1]))
                     elif len(value) == 1:
-                        id = self.get_id(self.id_path, None)
+                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
 
                         if id is not None:
                             self.start(str(value[0]), id)
@@ -45,16 +46,16 @@ class Command:
                         sys.exit(0)
 
                 elif key is "stop":
-                    logger.debug("length " + str(len(value)))
+                    #logger.debug("length " + str(len(value)))
 
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all")
+                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
                         else:
                             logger.debug("Value " + str(value))
                             id = value
                     else:
-                        id = self.get_id(self.id_path, None)
+                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
                     if id is not None:
                         self.stop(id)
                     else:
@@ -63,11 +64,11 @@ class Command:
                     self.status()
 
                 elif key is "restart":
-                    logger.debug("length: "+str(len(value)))
-                    logger.debug("value "+str(value))
+                    #logger.debug("length: "+str(len(value)))
+                    #logger.debug("value "+str(value))
                     if len(value) == 3:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all")
+                            id = self.get_id(self.id_path,"all",self.command_to_execute["host"])
                             if id is not None:
                                 self.restart(str(value[0]), str(value[1]),id)
                             else:
@@ -76,19 +77,19 @@ class Command:
                         else:
                             self.restart(str(value[0]), str(value[1]),[str(value[2])])
                     elif len(value) == 2:
-                        id = self.get_id(self.id_path, None)
+                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
                         if id is not None:
                             self.restart(str(value[0]),str(value[1]), id)
                         else:
                             self.restart(str(value[0]), str(value[1]), None)
                     elif len(value) == 1:
-                        id = self.get_id(self.id_path, None)
+                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
                         if id is not None:
                             self.restart(str(value[0]),None, id)
                         else:
                             self.restart(str(value[0]),None, None)
                     else:
-                        id = self.get_id(self.id_path, None)
+                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
                         if id is not None:
                             self.restart(None, None, id)
                         else:
@@ -98,21 +99,16 @@ class Command:
     def restart(self, model_name, filepath, id):
 
         logger.debug("restart")
-
-        logger.debug("model_name "+str(model_name))
-        logger.debug("id "+str(id))
-        logger.debug("filepath: " + str(filepath) +" type: "+str(type(filepath)))
-        logger.debug("type none: "+str(type(None)))
-        import ast
+        self.restart_flag=True
 
         if filepath == "None":
-            logger.debug("fileptah is str none")
+            #logger.debug("fileptah is str none")
             payload = None
         elif filepath is None:
-            logger.debug("fileptah is none")
+            #logger.debug("fileptah is none")
             payload = None
         else:
-            logger.debug("fileptah is str 2")
+            #logger.debug("fileptah is str 2")
             try:
                 with open(filepath, "r") as myfile:
                     payload = myfile.read()
@@ -132,40 +128,31 @@ class Command:
             logger.debug("Restarting the following instances: " + str(id))
             instance_status = {}
             for element in id:
-                logger.debug("id " + str(element))
+                #logger.debug("id " + str(element))
 
                 status = self.status()
-
-                for topics in status["status"]:
-                    for key, value in topics.items():
-                        if "id" in key:
-                            instance_status = topics
-                            break
-
-                del instance_status["id"]
-                del instance_status["status"]
-                del instance_status["start_time"]
+                #logger.debug("status "+ str(status))
+                if status:
+                    for id, body in status["status"].items():
+                        for key, value in body.items():
+                            if "config" in key:
+                                instance_status = value
+                                break
 
                 if payload is None:
                     payload=instance_status
                 else:
                     payload=json.loads(payload)
-                    logger.debug("payload 0: " + str(payload))
 
-                logger.debug("model_name 0: " + str(model_name) +str(type(model_name)))
                 if model_name == "None":
-                    logger.debug("str None")
                     pass
                 elif model_name is None:
-                    logger.debug("None")
                     pass
                 else:
-                    logger.debug("model_name: " + str(model_name))
                     payload["model_name"] = model_name
 
 
                 payload = json.dumps(payload)
-                logger.debug("payload: " + str(payload))
                 endpoint = "v1/optimization/start/" + str(element)
                 response = self.connection.send_request("PUT", endpoint, payload, headers)
                 logger.debug(json.dumps(response, indent=4, sort_keys=True))
@@ -178,7 +165,6 @@ class Command:
 
         logger.debug("start")
 
-        logger.debug("path: " + filepath)
         payload = ""
         try:
             with open(filepath, "r") as myfile:
@@ -193,11 +179,11 @@ class Command:
         }
         #if self.command_to_execute["id"] is not None:
         if id is not None:
-            logger.debug("id "+str(id)+" type "+str(type(id)))
+            #logger.debug("id "+str(id)+" type "+str(type(id)))
             if isinstance(id,list):
                 logger.debug("Starting the following instances: "+str(id))
                 for element in id:
-                    logger.debug("id "+str(element))
+                    #logger.debug("id "+str(element))
                     endpoint = "v1/optimization/start/" + str(element)
                     response = self.connection.send_request("PUT", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
@@ -227,7 +213,7 @@ class Command:
             if isinstance(id,list):
                 logger.debug("Stoping the following instances: "+str(id))
                 for element in id:
-                    logger.debug("List of "+str(element))
+                    #logger.debug("List of "+str(element))
                     endpoint = "v1/optimization/stop/" + element
                     response = self.connection.send_request("PUT", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
@@ -237,17 +223,19 @@ class Command:
             sys.exit(0)
 
 
-    def get_id(self, path, number=None):
+    def get_id(self, path, number, host):
+        path = host + "-" + path
         if os.path.isfile(path):
-            logger.debug("Path exists")
+            #logger.debug("Path exists")
             with open(path, "r") as myfile:
                 id = myfile.read().splitlines()
         else:
             id = None
-        logger.debug("Ids present in this session: " + str(id))
+        #logger.debug("Ids present in this session: " + str(id))
         if id is not None:
-            logger.debug("Working id " + str(id[-1]))
-        logger.debug("number  " + str(number))
+            pass
+            #logger.debug("Working id " + str(id[-1]))
+        #logger.debug("number  " + str(number))
         if number is not None:
             if "all" in number:
                 return id
@@ -272,6 +260,7 @@ class Command:
 
         endpoint = "v1/optimization/status"
         response = self.connection.send_request("GET", endpoint, payload, headers)
-        logger.debug(json.dumps(response, indent=4, sort_keys=True))
+        if not self.restart_flag:
+            logger.debug(json.dumps(response, indent=4, sort_keys=True))
         return response
 

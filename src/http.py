@@ -45,7 +45,7 @@ class Http:
         self.conn.request(self.request,self.endpoint, self.payload, self.header)
 
         res = self.conn.getresponse()
-        logger.debug("Response reason: " + str(res.getheader("Location")))
+        #logger.debug("Response reason: " + str(res.getheader("Location")))
         header=res.getheader("Location")
         path=os.path.split(header)
         header = path[1]

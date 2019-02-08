@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['ofw.py'],
-             pathex=['C:\\Users\\gajjar\\Documents\\opt\\ofw_client\\ofw_commands\\src'],
+             pathex=['H:\\Doktorarbeit\\UCC\\OptiFramework\\ofw_commands\\src'],
              binaries=[],
              datas=[],
              hiddenimports=[],

@@ -23,11 +23,11 @@ class Data_output:
                 if key is "list":
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all")
+                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
                         else:
                             id = value
                     else:
-                        id = self.get_id(self.id_path, None)
+                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
                     if id is not None:
                         self.list(id)
                     else:
@@ -36,11 +36,11 @@ class Data_output:
                 elif key is "delete":
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all")
+                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
                         else:
                             id = value
                     else:
-                        id = self.get_id(self.id_path, None)
+                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
                     if id is not None:
                         self.delete(id)
                     else:
@@ -49,7 +49,7 @@ class Data_output:
                     if len(value) == 2:
                         self.add(str(value[0]), str(value[1]))
                     else:
-                        id=self.get_id(self.id_path)
+                        id=self.get_id(self.id_path, None, self.command_to_execute["host"])
                         if id is not None:
                             self.add(str(value[0]), id)
                         else:
@@ -90,7 +90,7 @@ class Data_output:
             if isinstance(id,list):
                 logger.debug("List of the following instances: "+str(id))
                 for element in id:
-                    logger.debug("List of "+str(element))
+                    #logger.debug("List of "+str(element))
                     endpoint = "v1/outputs/dataset/" + element
                     response = self.connection.send_request("DELETE", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
@@ -108,7 +108,7 @@ class Data_output:
     def add(self, filepath, id=None):
         logger.debug("Add data_output")
 
-        logger.debug("path: "+filepath)
+        #logger.debug("path: "+filepath)
         payload=""
         with open(filepath,"r") as myfile:
             payload=myfile.read()
@@ -119,8 +119,8 @@ class Data_output:
         }
 
         if id is not None:
-            logger.debug("id found for data_ouput")
-            logger.debug("id "+str(id))
+            #logger.debug("id found for data_ouput")
+            #logger.debug("id "+str(id))
             endpoint = "v1/outputs/mqtt/"+id[0]
             response=self.connection.send_request("PUT", endpoint, payload, headers)
             logger.debug(json.dumps(response, indent=4, sort_keys=True))
@@ -128,18 +128,20 @@ class Data_output:
             logger.error("Id is missing as parameter")
             sys.exit(0)
 
-    def get_id(self, path, number=None):
+    def get_id(self, path, number, host):
+        path = host + "-" + path
 
         if os.path.isfile(path):
-            logger.debug("Path exists")
+            #logger.debug("Path exists")
             with open(path, "r") as myfile:
                 id = myfile.read().splitlines()
         else:
             id = None
-        logger.debug("Ids present in this session: " + str(id))
+        #logger.debug("Ids present in this session: " + str(id))
         if id is not None:
-            logger.debug("Working id " + str(id[-1]))
-        logger.debug("number  " + str(number))
+            pass
+            #logger.debug("Working id " + str(id[-1]))
+        #logger.debug("number  " + str(number))
         if number is not None:
             if "all" in number:
                 return id
@@ -155,7 +157,7 @@ class Data_output:
     def erase_id(self, path, id):
         if os.path.isfile(path):
             try:
-                id_from_file = self.get_id(path,"all")
+                id_from_file = self.get_id(path,"all", self.command_to_execute["host"])
                 values=[]
                 for element in id_from_file:
                     if id in element:

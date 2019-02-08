@@ -132,7 +132,7 @@ def parser():
     command_group.add_option("--status", help="receives the status of the optimnization", dest="status", action="store_true")
 
     command_group.add_option("--restart",
-                             help="<model_name> <filepath> <id>   stops the running instances and starts the optimnization again. If id is not present takes the last id used. Write all to start all instances",
+                             help="<model_name> <filepath> <id>   stops the running instances and starts the optimization again. If filepath not present takes the last configuration used. Write None if no filepath is needed.  If id is not present takes the last id used. Write all to start all instances",
                              dest="restart", metavar='<filepath> <id>',
                              action="callback", callback=vararg_callback_2)
 
@@ -216,32 +216,32 @@ if __name__ == '__main__':
     command_to_execute = {}
     command_to_execute=parser()
 
-    logger.debug("command to execute: "+str(command_to_execute))
+    #logger.debug("command to execute: "+str(command_to_execute))
     http = Http(command_to_execute)
     for key, value in command_to_execute["model"].items():
         if value is not None:
-            logger.debug("key exists "+str(key))
+            #logger.debug("key exists "+str(key))
             logger.debug("Executing the command model")
             model = Models()
             model.execute(http, command_to_execute)
 
     for key, value in command_to_execute["data_source"].items():
         if value is not None:
-            logger.debug("key exists "+str(key))
+            #logger.debug("key exists "+str(key))
             logger.debug("Executing the command input")
             data_source = Data_source()
             data_source.execute(http, command_to_execute)
 
     for key, value in command_to_execute["data_output"].items():
         if value is not None:
-            logger.debug("key exists "+str(key))
+            #logger.debug("key exists "+str(key))
             logger.debug("Executing the command output")
             data_output = Data_output()
             data_output.execute(http, command_to_execute)
 
     for key, value in command_to_execute["command"].items():
         if value is not None:
-            logger.debug("key exists "+str(key))
+            #logger.debug("key exists "+str(key))
             logger.debug("Executing the command")
             command = Command()
             command.execute(http, command_to_execute)
