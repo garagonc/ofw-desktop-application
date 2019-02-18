@@ -18,7 +18,7 @@ import logging, os
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 
-
+host_path="hostname.config"
 
 def vararg_callback_1(option, opt_str, value, parser):
     assert value is None
@@ -103,6 +103,33 @@ def vararg_callback_2(option, opt_str, value, parser):
 
     del parser.rargs[:len(value)]
     setattr(parser.values, option.dest, value)
+
+def store(path, data):
+    host=get_host(path)
+    host=host[0]
+    if host is not None:
+        if host == data:
+            msg = "Host already existing"
+        else:
+            logger.debug("Different hostname found")
+            with open(path, 'w') as outfile:
+                outfile.write(data)
+            msg = "Host name stored"
+
+    else:
+        with open(path, 'w') as outfile:
+            outfile.write(data)
+        msg = "Host name stored"
+
+    logger.debug(msg)
+
+def get_host(path):
+    if os.path.isfile(path):
+        with open(path, "r") as myfile:
+            host = myfile.read().splitlines()
+    else:
+        host=None
+    return host
 
 
 
@@ -189,9 +216,17 @@ def parser():
     command={"start":opts.start, "stop":opts.stop, "status":opts.status, "restart":opts.restart}
 
     if (tgtHost == None):
-        logger.error(parser.usage)
-        sys.exit(0)
-    elif (tgtPort == None):
+        host=get_host(host_path)
+        logger.debug("host "+str(host))
+        if host is None:
+            logger.error(parser.usage)
+            sys.exit(0)
+        else:
+            tgtHost = host
+    else:
+        store(host_path, tgtHost)
+
+    if (tgtPort == None):
         tgtPort = "8080"
 
     command_to_execute["host"] = tgtHost
@@ -215,6 +250,7 @@ if __name__ == '__main__':
 
     command_to_execute = {}
     command_to_execute=parser()
+
 
     #logger.debug("command to execute: "+str(command_to_execute))
     http = Http(command_to_execute)
