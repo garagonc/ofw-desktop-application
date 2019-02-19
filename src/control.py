@@ -6,13 +6,16 @@ Created on Jan 25 17:53 2019
 import sys
 import logging, os
 import json
-
+import csv
+import pandas as pd
+#import xlsxwriter
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 class Data_output:
 
     id_path="id.config"
+    output_path= "output.csv"
 
     def execute(self, connection, command_to_execute):
         self.connection=connection
@@ -71,7 +74,11 @@ class Data_output:
                     logger.debug("List of "+str(element))
                     endpoint = "v1/outputs/" + element
                     response = self.connection.send_request("GET", endpoint, payload, headers)
-                    logger.debug(json.dumps(response, indent=4, sort_keys=True))
+                    df = pd.DataFrame(response)
+                    logger.debug(df)
+                    #logger.debug(json.dumps(response, indent=4, sort_keys=True))
+                    msg=self.store_as_excel(df, id)
+                    logger.debug(msg)
         else:
             logger.error("No ids to list")
             sys.exit(0)
@@ -103,6 +110,28 @@ class Data_output:
         else:
             logger.error("No ids to delete")
             sys.exit(0)
+
+
+    def store_as_excel(self, data, id):
+        try:
+            folder="outputs"
+            name="output-"+str(id[0])+".xlsx"
+            path= os.path.join(folder,name)
+            if not os.path.exists(folder):
+                os.makedirs(folder)
+            # Create a Pandas dataframe from the data.
+            df = data
+            # Create a Pandas Excel writer using XlsxWriter as the engine.
+            writer = pd.ExcelWriter(path, engine='xlsxwriter')
+            # Convert the dataframe to an XlsxWriter Excel object.
+            df.to_excel(writer, sheet_name='Sheet1')
+            # Close the Pandas Excel writer and output the Excel file.
+            writer.save()
+            msg= "stored in "+str(path)
+            return msg
+        except Exception as e:
+            logger.error(e)
+
 
 
     def add(self, filepath, id=None):
