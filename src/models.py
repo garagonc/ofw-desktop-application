@@ -63,7 +63,7 @@ class Models:
             endpoint="v1/models/"+model_name
             response = self.connection.send_request_model_read("GET", endpoint, payload, headers)
             if not flag_instance:
-                folder="temp"
+                folder="models"
                 if not os.path.exists(folder):
                     os.makedirs(folder)
                 path=os.path.join(folder,model_name+".txt")
