@@ -267,7 +267,7 @@ if __name__ == '__main__':
     command_to_execute=parser()
 
 
-    logger.debug("command to execute: "+str(command_to_execute))
+    #logger.debug("command to execute: "+str(command_to_execute))
     http = Http(command_to_execute)
     for key, value in command_to_execute["model"].items():
         if value is not None:
