@@ -9,6 +9,7 @@ from src.models import Models
 from src.data_source import Data_source
 from src.control import Data_output
 from src.command import Command
+from src.instance import Instance
 from src.http import Http
 import optparse
 import logging, os
@@ -106,7 +107,6 @@ def vararg_callback_2(option, opt_str, value, parser):
 
 def store(path, data):
     host=get_host(path)
-    host=host[0]
     if host is not None:
         if host == data:
             msg = "Host already existing"
@@ -126,7 +126,7 @@ def store(path, data):
 def get_host(path):
     if os.path.isfile(path):
         with open(path, "r") as myfile:
-            host = myfile.read().splitlines()
+            host = myfile.read()
     else:
         host=None
     return host
@@ -194,14 +194,27 @@ def parser():
 
     models_group.add_option("--model_add", help="<filepath> <model_name>  registers an optimization model", dest="model_add",
                             metavar='<filepath> <model_name>', action="callback", callback=vararg_callback)
-    models_group.add_option("--model_list", help="gets the models name stored at ofw", dest="model_list", action="store_true")
-    models_group.add_option("--model_delete", help="deletes an optimization model with the respective id",
+    models_group.add_option("--model_list", help="gets the models name stored at ofw. Write a model name to get the whole optimization model displayed", dest="model_list", metavar='<model_name>', action="callback", callback=vararg_callback_1)
+    models_group.add_option("--model_delete", help="deletes an optimization model with the respective name. Write all to delete all registered models",
                             dest="model_delete", metavar='<model_name>', action="store")
+
+    #######################################################################################
+    ###################     Instance              ############################################
+    instance_group = optparse.OptionGroup(parser, "Creating an instance")
+
+    instance_group.add_option("--instance_add", help="registers an instance linked to an optimization model. It will create a folder with the name of your model and add a config file in there. Please configure that config file",
+                            dest="instance_add",metavar='<instance_name> <model_name>', nargs=2, action="store")
+    instance_group.add_option("--instance_list", help="gets the instance names stored at ofw", dest="instance_list",
+                            action="store_true")
+    instance_group.add_option("--instance_delete",
+                            help="deletes a stored instance with the respective name. Write all to delete all registered instances",
+                            dest="instance_delete", metavar='<instance_name>', action="store")
 
     parser.add_option_group(models_group)
     parser.add_option_group(data_source_group)
     parser.add_option_group(data_output_group)
     parser.add_option_group(command_group)
+    parser.add_option_group(instance_group)
 
     (opts, args) = parser.parse_args()
 
@@ -214,6 +227,7 @@ def parser():
     data_source = {"add":opts.ds_add, "list": opts.ds_list, "delete": opts.ds_delete}
     data_output = {"add": opts.do_add, "list": opts.do_list, "delete": opts.do_delete}
     command={"start":opts.start, "stop":opts.stop, "status":opts.status, "restart":opts.restart}
+    instance = {"add": opts.instance_add, "list": opts.instance_list, "delete": opts.instance_delete}
 
     if (tgtHost == None):
         host=get_host(host_path)
@@ -235,6 +249,7 @@ def parser():
     command_to_execute["data_source"] = data_source
     command_to_execute["data_output"] = data_output
     command_to_execute["command"] = command
+    command_to_execute["instance"] = instance
 
     return command_to_execute
 
@@ -252,7 +267,7 @@ if __name__ == '__main__':
     command_to_execute=parser()
 
 
-    #logger.debug("command to execute: "+str(command_to_execute))
+    logger.debug("command to execute: "+str(command_to_execute))
     http = Http(command_to_execute)
     for key, value in command_to_execute["model"].items():
         if value is not None:
@@ -281,3 +296,10 @@ if __name__ == '__main__':
             logger.debug("Executing the command")
             command = Command()
             command.execute(http, command_to_execute)
+
+    for key, value in command_to_execute["instance"].items():
+        if value is not None:
+            #logger.debug("key exists "+str(key))
+            logger.debug("Creating an instance")
+            instance = Instance()
+            instance.execute(http, command_to_execute)
