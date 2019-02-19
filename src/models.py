@@ -26,7 +26,13 @@ class Models:
         for key, value in command_to_execute["model"].items():
             if value is not None:
                 if key is "list":
-                    self.list()
+                    logger.debug("value " + str(value))
+                    logger.debug("Len value "+str(len(value)))
+                    if len(value) == 1:
+                        model_name = value[0]
+                    else:
+                        model_name = None
+                    self.list(model_name)
                 elif key is "delete":
                     self.delete(value)
                 elif key is "add":
@@ -37,16 +43,36 @@ class Models:
                         self.add(str(value[0]), filename)
 
 
-    def list(self):
+    def list(self, model_name=None, connection=None):
         #need to use host
         # curl may not work on windows terminal
+        flag_instance=False
         logger.debug("list")
+        if connection is not None:
+            self.connection=connection
+            flag_instance=True
+
         payload = ""
         headers = {
             'cache-control': "no-cache"
         }
-        response=self.connection.send_request("GET","v1/models",payload, headers)
-        logger.debug(json.dumps(response, indent=4, sort_keys=True))
+        if model_name is None:
+            response=self.connection.send_request("GET","v1/models",payload, headers)
+            logger.debug(json.dumps(response, indent=4, sort_keys=True))
+        else:
+            endpoint="v1/models/"+model_name
+            response = self.connection.send_request_model_read("GET", endpoint, payload, headers)
+            if not flag_instance:
+                folder="temp"
+                if not os.path.exists(folder):
+                    os.makedirs(folder)
+                path=os.path.join(folder,model_name+".txt")
+                with open(path, 'wb') as outfile:
+                    outfile.write(response)
+                logger.debug("File saved as "+ path)
+            else:
+                logger.debug("Optimization model received")
+
         return response
 
 
