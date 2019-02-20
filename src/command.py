@@ -6,7 +6,7 @@ Created on Jan 25 17:53 2019
 import logging, os
 import sys
 import json
-
+from src.utils import Utils
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
@@ -16,6 +16,9 @@ class Command:
 
     id_path = "id.config"
     restart_flag=False
+
+    def __init__(self):
+        self.util = Utils()
 
     def execute(self, connection, command_to_execute):
         self.connection=connection
@@ -27,7 +30,7 @@ class Command:
                     #logger.debug("length: "+str(len(value)))
                     if len(value) == 2:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
+                            id = self.util.get_id(self.id_path,"all", self.command_to_execute["host"])
                             if id is not None:
                                 self.start(str(value[0]), id)
                             else:
@@ -35,7 +38,7 @@ class Command:
                         else:
                             self.start(str(value[0]), str(value[1]))
                     elif len(value) == 1:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
 
                         if id is not None:
                             self.start(str(value[0]), id)
@@ -50,12 +53,12 @@ class Command:
 
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
+                            id = self.util.get_id(self.id_path,"all", self.command_to_execute["host"])
                         else:
                             logger.debug("Value " + str(value))
                             id = value
                     else:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                     if id is not None:
                         self.stop(id)
                     else:
@@ -68,7 +71,7 @@ class Command:
                     #logger.debug("value "+str(value))
                     if len(value) == 3:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all",self.command_to_execute["host"])
+                            id = self.util.get_id(self.id_path,"all",self.command_to_execute["host"])
                             if id is not None:
                                 self.restart(str(value[0]), str(value[1]),id)
                             else:
@@ -77,26 +80,26 @@ class Command:
                         else:
                             self.restart(str(value[0]), str(value[1]),[str(value[2])])
                     elif len(value) == 2:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                         if id is not None:
                             self.restart(str(value[0]),str(value[1]), id)
                         else:
                             self.restart(str(value[0]), str(value[1]), None)
                     elif len(value) == 1:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                         if id is not None:
                             self.restart(str(value[0]),None, id)
                         else:
                             self.restart(str(value[0]),None, None)
                     else:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                         if id is not None:
                             self.restart(None, None, id)
                         else:
                             self.restart(None, None, None)
 
 
-    def restart(self, model_name, filepath, id):
+    def restart(self, model_name, filepath=None, id=None):
 
         logger.debug("restart")
         self.restart_flag=True
@@ -223,7 +226,7 @@ class Command:
             sys.exit(0)
 
 
-    def get_id(self, path, number, host):
+    """def get_id(self, path, number, host):
         path = host + "-" + path
         if os.path.isfile(path):
             #logger.debug("Path exists")
@@ -246,7 +249,7 @@ class Command:
             if id is not None:
                 return [id[-1]]
             else:
-                return None
+                return None"""
 
 
     def status(self):

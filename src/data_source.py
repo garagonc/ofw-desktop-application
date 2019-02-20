@@ -6,6 +6,7 @@ Created on Jan 25 17:53 2019
 import sys
 import logging, os
 import json
+from src.utils import Utils
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
@@ -13,6 +14,9 @@ logger = logging.getLogger(__file__)
 class Data_source:
 
     id_path = "id.config"
+
+    def __init__(self):
+        self.util = Utils()
 
     def execute(self, connection, command_to_execute):
         self.connection=connection
@@ -23,11 +27,11 @@ class Data_source:
                 if key is "list":
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
+                            id = self.util.get_id(self.id_path,"all", self.command_to_execute["host"])
                         else:
                             id = value
                     else:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                     if id is not None:
                         self.list(id)
                     else:
@@ -36,12 +40,12 @@ class Data_source:
                     #logger.debug("length "+str(len(value)))
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
+                            id = self.util.get_id(self.id_path,"all", self.command_to_execute["host"])
                         else:
                             logger.debug("Value "+str(value))
                             id = value
                     else:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                     if id is not None:
                         logger.debug("id "+str(id))
                         self.delete(id)
@@ -106,15 +110,15 @@ class Data_source:
                         endpoint = "v1/inputs/dataset/" + element
                         response = self.connection.send_request("DELETE", endpoint, payload, headers)
                         logger.debug(json.dumps(response, indent=4, sort_keys=True))
-                        self.erase_id(self.id_path,element,self.command_to_execute["host"])
+                        self.util.erase_id(self.id_path,element,self.command_to_execute["host"])
 
                         endpoint = "v1/inputs/mqtt/" + element
                         response = self.connection.send_request("DELETE", endpoint, payload, headers)
                         logger.debug(json.dumps(response, indent=4, sort_keys=True))
-                        self.erase_id(self.id_path, element,self.command_to_execute["host"])
+                        self.util.erase_id(self.id_path, element,self.command_to_execute["host"])
 
                 except Exception as e:
-                    self.erase_id(self.id_path,self.element_to_erase,self.command_to_execute["host"])
+                    self.util.erase_id(self.id_path,self.element_to_erase,self.command_to_execute["host"])
                     logger.error(e)
 
         else:
@@ -122,7 +126,7 @@ class Data_source:
             sys.exit(0)
 
 
-    def add(self, filepath, id=None):
+    def add(self, filepath, id=None, instance_name=None):
         logger.debug("Add inputs")
         #project_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -172,11 +176,16 @@ class Data_source:
                 response = self.connection.send_request_add("POST", endpoint, payload, headers)
                 if response is not None:
                     logger.debug("Id: " + json.dumps(response, indent=4, sort_keys=True))
-                    self.store("id.config",response, self.command_to_execute["host"])
+                    folder="config"
+                    path = self.command_to_execute["host"] + "-" + self.id_path
+                    os.path.join(folder,path)
+                    data = {}
+                    data[instance_name]= response
+                    self.util.store(path,data)
             except Exception as e:
                 logger.error(e)
                 sys.exit(0)
-
+    """
     def store(self, path, data, host):
         path=host+"-"+path
         if os.path.isfile(path):
@@ -242,4 +251,4 @@ class Data_source:
                             else:
                                 outfile.write("\n%s" % item)
             except Exception as e:
-                logger.error(e)
+                logger.error(e)"""

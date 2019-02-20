@@ -8,6 +8,7 @@ import logging, os
 import json
 import csv
 import pandas as pd
+from src.utils import Utils
 #import xlsxwriter
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
@@ -16,6 +17,10 @@ class Data_output:
 
     id_path="id.config"
     output_path= "output.csv"
+
+    def __init__(self):
+        self.util=Utils()
+
 
     def execute(self, connection, command_to_execute):
         self.connection=connection
@@ -26,11 +31,11 @@ class Data_output:
                 if key is "list":
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
+                            id = self.util.get_id(self.id_path,"all", self.command_to_execute["host"])
                         else:
                             id = value
                     else:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                     if id is not None:
                         self.list(id)
                     else:
@@ -39,11 +44,11 @@ class Data_output:
                 elif key is "delete":
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.get_id(self.id_path,"all", self.command_to_execute["host"])
+                            id = self.util.get_id(self.id_path,"all", self.command_to_execute["host"])
                         else:
                             id = value
                     else:
-                        id = self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                     if id is not None:
                         self.delete(id)
                     else:
@@ -52,7 +57,7 @@ class Data_output:
                     if len(value) == 2:
                         self.add(str(value[0]), str(value[1]))
                     else:
-                        id=self.get_id(self.id_path, None, self.command_to_execute["host"])
+                        id=self.util.get_id(self.id_path, None, self.command_to_execute["host"])
                         if id is not None:
                             self.add(str(value[0]), id)
                         else:
@@ -105,7 +110,7 @@ class Data_output:
                     endpoint = "v1/outputs/mqtt/" + element
                     response = self.connection.send_request("DELETE", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
-                    self.erase_id(self.id_path,element)
+                    self.util.erase_id(self.id_path,element,self.command_to_execute["host"])
 
         else:
             logger.error("No ids to delete")
@@ -157,7 +162,7 @@ class Data_output:
             logger.error("Id is missing as parameter")
             sys.exit(0)
 
-    def get_id(self, path, number, host):
+    """def get_id(self, path, number, host):
         path = host + "-" + path
 
         if os.path.isfile(path):
@@ -201,4 +206,4 @@ class Data_output:
                         for item in values:
                             outfile.write("%s\n" % item)
             except Exception as e:
-                logger.error(e)
+                logger.error(e)"""

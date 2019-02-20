@@ -14,7 +14,7 @@ from src.http import Http
 import optparse
 import logging, os
 
-
+from src.utils import Utils
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
@@ -105,31 +105,9 @@ def vararg_callback_2(option, opt_str, value, parser):
     del parser.rargs[:len(value)]
     setattr(parser.values, option.dest, value)
 
-def store(path, data):
-    host=get_host(path)
-    if host is not None:
-        if host == data:
-            msg = "Host already existing"
-        else:
-            logger.debug("Different hostname found")
-            with open(path, 'w') as outfile:
-                outfile.write(data)
-            msg = "Host name stored"
 
-    else:
-        with open(path, 'w') as outfile:
-            outfile.write(data)
-        msg = "Host name stored"
 
-    logger.debug(msg)
 
-def get_host(path):
-    if os.path.isfile(path):
-        with open(path, "r") as myfile:
-            host = myfile.read()
-    else:
-        host=None
-    return host
 
 
 
@@ -151,15 +129,16 @@ def parser():
     ###################     command             ############################################
     command_group = optparse.OptionGroup(parser, "Endpoint command")
 
-    command_group.add_option("--start", help="<filepath> <id>   starts the optimnization. If id is not present takes the last id used. Write all to start all instances", dest="start", metavar='<filepath> <id>',
+    command_group.add_option("--start", help="<filepath or instance_name> <id>   starts the optimnization. If id is not present takes the last id used. Write all to start all instances", dest="start", metavar='<filepath> <id>',
                              action="callback",callback=vararg_callback)
     # command_group.add_option("--start",help="starts the optimnization",dest="start",metavar='<filepath> <id>', nargs=2, action="store")
-    command_group.add_option("--stop", help="<id>  stops the optimnization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
+    command_group.add_option("--stop", help="<id or instance_name>  stops the optimnization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
                              metavar='<id>', action="callback", callback=vararg_callback_1)
     command_group.add_option("--status", help="receives the status of the optimnization", dest="status", action="store_true")
 
     command_group.add_option("--restart",
-                             help="<model_name> <filepath> <id>   stops the running instances and starts the optimization again. If filepath not present takes the last configuration used. Write None if no filepath is needed.  If id is not present takes the last id used. Write all to start all instances",
+
+                             help="<model_name or instance name> <filepath> <id>   stops the running instances and starts the optimization again. If filepath not present takes the last configuration used. Write None if no filepath is needed.  If id is not present takes the last id used. Write all to start all instances",
                              dest="restart", metavar='<filepath> <id>',
                              action="callback", callback=vararg_callback_2)
 
@@ -229,8 +208,9 @@ def parser():
     command={"start":opts.start, "stop":opts.stop, "status":opts.status, "restart":opts.restart}
     instance = {"add": opts.instance_add, "list": opts.instance_list, "delete": opts.instance_delete}
 
+    utils=Utils()
+    host = utils.get_host(host_path)
     if (tgtHost == None):
-        host=get_host(host_path)
         logger.debug("host "+str(host))
         if host is None:
             logger.error(parser.usage)
@@ -238,7 +218,8 @@ def parser():
         else:
             tgtHost = host
     else:
-        store(host_path, tgtHost)
+        utils.store(host_path, tgtHost)
+
 
     if (tgtPort == None):
         tgtPort = "8080"

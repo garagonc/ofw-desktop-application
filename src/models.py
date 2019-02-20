@@ -9,6 +9,7 @@ import logging, os
 import ntpath
 import re
 import json
+import pandas as pd
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
@@ -58,7 +59,10 @@ class Models:
         }
         if model_name is None:
             response=self.connection.send_request("GET","v1/models",payload, headers)
-            logger.debug(json.dumps(response, indent=4, sort_keys=True))
+            data_to_show=response["models"]
+            df = pd.DataFrame(data_to_show)
+            logger.debug(df)
+            #logger.debug(json.dumps(response, indent=4, sort_keys=True))
         else:
             endpoint="v1/models/"+model_name
             response = self.connection.send_request_model_read("GET", endpoint, payload, headers)

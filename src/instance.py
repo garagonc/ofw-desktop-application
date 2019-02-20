@@ -39,8 +39,6 @@ class Instance:
                     if len(value) == 2:
                         self.add(str(value[0]),str(value[1]))
 
-
-
     def list(self):
         #need to use host
         # curl may not work on windows terminal
@@ -86,14 +84,14 @@ class Instance:
         logger.debug("Adding an instance")
         logger.debug("Instance name "+str(instance_name))
         logger.debug("Model name "+str(model_name))
+        folder="instances"
         filename="instance_name.xlsx"
-        #path = model_name+"/instance_name.xlsx"
-        path = os.path.join(model_name,instance_name)
+        folder_path=os.path.join(folder,model_name)
+        path = os.path.join(folder,model_name,instance_name)
         logger.debug("path "+str(path))
-        data="This is an example"
         try:
-            if not os.path.exists(model_name):
-                os.makedirs(model_name)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
             #Call a function that reads the input, outputs from model_name and start parameters
             data=self.readInputsOutputs(model_name)
             #ToDo Call a function that inserts the inputs and output information and generates a muster instance_name.xlsx
@@ -107,10 +105,6 @@ class Instance:
         logger.debug("Reading inputs and outputs")
         models = Models()
         data = models.list(model_name,self.connection)
-        #logger.debug("data "+str(data))
-        logger.debug("type data " + str(type(data.decode("utf-8"))))
-        inputs=[]
-        outputs=[]
         data=data.decode("utf-8")
         data_param = [x for x in data.split("\n") if "Param" in x]
         data_param_1=[]
@@ -137,6 +131,6 @@ class Instance:
         data_to_return["inputs"] = data_param_1
         data_to_return["outputs"] = data_var_1
         data_to_return["start"] = start
-        logger.debug("data to return " + str(data_to_return))
+        #logger.debug("data to return " + str(data_to_return))
         return data_to_return
 
