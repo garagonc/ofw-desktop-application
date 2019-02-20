@@ -9,7 +9,7 @@ import logging, os, sys
 import ntpath
 import re
 import json
-import pandas as pd
+
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
@@ -17,33 +17,41 @@ logger = logging.getLogger(__file__)
 class Utils:
 
 
-
     def store(self, path, data):
-        logger.debug("Storing data")
-        logger.debug("type data "+str(type(data)))
-
+        #logger.debug("Storing data")
+        #logger.debug("type data "+str(type(data)))
         folder_path=os.path.dirname(os.path.abspath(path))
-        logger.debug("folder path "+str(folder_path))
+        #logger.debug("folder path "+str(folder_path))
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
+
         if os.path.isfile(path):
-            logger.debug("File found")
-            data_to_store = "\n" + data
             if isinstance(data, str):
+                data_to_store = "\n" + data
                 with open(path, 'a+') as outfile:
                     outfile.write(data_to_store)
             elif isinstance(data, dict):
-                with open(path, 'a+') as outfile:
-                    outfile.write(json.dumps(data_to_store))
+                logger.debug("entered to the dict")
+                ids=self.get_id(path,"all")
+                logger.debug("ids " + str(ids))
+                logger.debug("ids[0] " + str(ids[0]))
+                ids_to_store=[]
+                for element in ids:
+                    logger.debug("element "+str(element))
+                    ids_to_store.append(element)
+                ids_to_store.append(data)
+                logger.debug("ids "+str(ids_to_store))
+                with open(path, 'w') as outfile:
+                    outfile.write(json.dumps(ids_to_store, indent=4, sort_keys=True))
         else:
-            logger.debug("File not found")
             if isinstance(data,str):
                 with open(path, 'w') as outfile:
                     outfile.write(data)
             elif isinstance(data, dict):
                 with open(path, 'w') as outfile:
-                    outfile.write(json.dumps(data))
+                    ids=[data]
+                    outfile.write(json.dumps(ids, indent=4, sort_keys=True))
 
 
         logger.debug("input data saved in "+str(path))
@@ -56,13 +64,11 @@ class Utils:
             host = None
         return host
 
-    def get_id(self, path, number, host):
-        path = host + "-" + path
-        #logger.debug("path "+path)
+    def get_id(self, path, number=None):
         if os.path.isfile(path):
-            #logger.debug("Path exists")
             with open(path, "r") as myfile:
-                id = myfile.read().splitlines()
+                id = json.load(myfile)
+                #logger.debug("id "+str(id))
         else:
             id=None
 
@@ -74,7 +80,9 @@ class Utils:
                 sys.exit(0)
         else:
             if id is not None:
-                return [id[-1]]
+                logger.debug("id_1 "+str(id))
+                logger.debug("id[-1] " + str(id[-1]))
+                return [json.loads(id[-1])]
             else:
                 return None
 
