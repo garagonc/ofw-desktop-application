@@ -9,6 +9,7 @@ import logging, os, sys
 import ntpath
 import re
 import json
+import pandas as pd
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
@@ -16,45 +17,72 @@ logger = logging.getLogger(__file__)
 
 class Utils:
 
-
-    def store(self, path, data):
-        #logger.debug("Storing data")
-        #logger.debug("type data "+str(type(data)))
-        folder_path=os.path.dirname(os.path.abspath(path))
-        #logger.debug("folder path "+str(folder_path))
+    def createFolderPath(self, folder_path):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
+    def isFile(self, path):
+        if os.path.isfile(path):
+            return True
+        else:
+            return False
+
+    def deleteFile(self,path):
+        os.remove(path)
+
+    def getFolderPath(self,path):
+        return os.path.dirname(os.path.abspath(path))
+
+    def store(self, path, data_list_of_dicts):
+        #logger.debug("Storing data")
+        #logger.debug("type data "+str(type(data)))
+        folder_path=self.getFolderPath(path)
+        #logger.debug("folder path "+str(folder_path))
+        self.createFolderPath(folder_path)
 
         if os.path.isfile(path):
-            if isinstance(data, str):
-                data_to_store = "\n" + data
-                with open(path, 'a+') as outfile:
-                    outfile.write(data_to_store)
-            elif isinstance(data, dict):
+            if isinstance(data_list_of_dicts, list):
                 logger.debug("entered to the dict")
                 ids=self.get_id(path,"all")
                 logger.debug("ids " + str(ids))
-                logger.debug("ids[0] " + str(ids[0]))
                 ids_to_store=[]
+
                 for element in ids:
-                    logger.debug("element "+str(element))
+                    #logger.debug("element "+str(element))
                     ids_to_store.append(element)
-                ids_to_store.append(data)
-                logger.debug("ids "+str(ids_to_store))
+                for element in data_list_of_dicts:
+                    #logger.debug("element " + str(element))
+                    ids_to_store.append(element)
+
+                #logger.debug("ids "+str(ids_to_store))
                 with open(path, 'w') as outfile:
                     outfile.write(json.dumps(ids_to_store, indent=4, sort_keys=True))
         else:
-            if isinstance(data,str):
+            if isinstance(data_list_of_dicts, list):
                 with open(path, 'w') as outfile:
-                    outfile.write(data)
-            elif isinstance(data, dict):
-                with open(path, 'w') as outfile:
-                    ids=[data]
+                    ids=data_list_of_dicts
                     outfile.write(json.dumps(ids, indent=4, sort_keys=True))
 
 
         logger.debug("input data saved in "+str(path))
+
+    def store_as_excel(self, path, data, id):
+        try:
+            folder_path=self.getFolderPath(path)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+            # Create a Pandas dataframe from the data.
+            df = data
+            # Create a Pandas Excel writer using XlsxWriter as the engine.
+            writer = pd.ExcelWriter(path, engine='xlsxwriter')
+            # Convert the dataframe to an XlsxWriter Excel object.
+            df.to_excel(writer, sheet_name='Sheet1')
+            # Close the Pandas Excel writer and output the Excel file.
+            writer.save()
+            msg= "stored in "+str(path)
+            return msg
+        except Exception as e:
+            logger.error(e)
 
     def get_host(self, path):
         if os.path.isfile(path):
@@ -80,57 +108,30 @@ class Utils:
                 sys.exit(0)
         else:
             if id is not None:
-                logger.debug("id_1 "+str(id))
-                logger.debug("id[-1] " + str(id[-1]))
-                return [json.loads(id[-1])]
+                #logger.debug("id_1 "+str(id))
+                #logger.debug("id[-1] " + str(id[-1])+" type "+str(type(id[-1])))
+                return [id[-1]]
             else:
                 return None
 
-    def erase_id(self, path, id, host):
-        path_new = host + "-" + path
+    def erase_id(self, path, id):
+        path_new =  path
+        logger.debug("id erase "+str(id))
         if os.path.isfile(path_new):
             try:
-                id_from_file = self.get_id(path,"all", self.command_to_execute["host"])
+                id_from_file = self.get_id(path,"all")
                 values=[]
                 for element in id_from_file:
                     #logger.debug("element "+str(element))
-                    if not id in element:
+                    for key in element.keys():
+                        element_to_compare=element[key]
+                    if not id in element_to_compare:
                         values.append(element)
-                logger.debug("values "+str(values))
+                #logger.debug("values "+str(values))
+                os.remove(path_new)
                 if len(values)==0:
-                    os.remove(path_new)
                     logger.debug("File "+path_new+" erased")
                 else:
-                    with open(path_new, 'w') as outfile:
-                        counter=0
-                        for item in values:
-                            if counter==0:
-                                outfile.write("%s" % item)
-                                counter=1
-                            else:
-                                outfile.write("\n%s" % item)
+                    self.store(path,values)
             except Exception as e:
                 logger.error(e)
-
-
-
-    def erase_id_erase(self, path, id):
-        if os.path.isfile(path):
-            try:
-                id_from_file = self.get_id(path,"all", self.command_to_execute["host"])
-                values=[]
-                for element in id_from_file:
-                    if id in element:
-                        continue
-                    else:
-                        values.append(element)
-                if len(values)==0:
-                    os.remove(path)
-                    logger.debug("File "+path+" erased")
-                else:
-                    with open(path, 'w') as outfile:
-                        for item in values:
-                            outfile.write("%s\n" % item)
-            except Exception as e:
-                logger.error(e)
-

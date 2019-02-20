@@ -95,8 +95,7 @@ class Instance:
             #Call a function that reads the input, outputs from model_name and start parameters
             data=self.readInputsOutputs(model_name)
             #ToDo Call a function that inserts the inputs and output information and generates a muster instance_name.xlsx
-            with open(path, 'w') as outfile:
-                outfile.write(data)
+
             logger.debug("File "+str(path)+" created")
         except Exception as e:
             logger.error(e)

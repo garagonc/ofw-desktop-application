@@ -7,50 +7,56 @@ import sys
 import logging, os
 import json
 from src.utils import Utils
-
+import pandas as pd
+import pickle
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 class Data_source:
 
     id_path = "id.config"
+    folder_path="config"
 
     def __init__(self):
         self.util = Utils()
 
+
     def execute(self, connection, command_to_execute):
         self.connection=connection
         self.command_to_execute=command_to_execute
+
+        path = self.command_to_execute["host"] + "-" + self.id_path
+        self.path = os.path.join(self.folder_path, path)
 
         for key, value in command_to_execute["data_source"].items():
             if value is not None:
                 if key is "list":
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.util.get_id(self.id_path,"all", self.command_to_execute["host"])
+                            #id = self.util.get_id(self.path,"all")
+                            self.list(None,"all")
+                        elif "ids" in value:
+                            self.list(None,"ids")
                         else:
                             id = value
+                            self.list(id)
                     else:
-                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
-                    if id is not None:
+                        id = self.util.get_id(self.path, None)
                         self.list(id)
-                    else:
-                        self.list(None)
+
                 elif key is "delete":
                     #logger.debug("length "+str(len(value)))
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.util.get_id(self.id_path,"all", self.command_to_execute["host"])
+                            id = self.util.get_id(self.path,"all")
                         else:
                             logger.debug("Value "+str(value))
                             id = value
                     else:
-                        id = self.util.get_id(self.id_path, None, self.command_to_execute["host"])
-                    if id is not None:
-                        logger.debug("id "+str(id))
-                        self.delete(id)
-                    else:
-                        self.delete(None)
+                        id = self.util.get_id(self.path, None)
+
+                    self.delete(id)
+
                 elif key is "add":
                     if len(value) == 2:
                         logger.debug("Value 0 "+str(value[0]))
@@ -61,7 +67,7 @@ class Data_source:
                         self.add(str(value[0]))
 
 
-    def list(self, id):
+    def list(self, id, all=None):
         #need to use host
         # curl may not work on windows terminal
         logger.debug("list inputs")
@@ -78,20 +84,48 @@ class Data_source:
                 logger.debug("List of the following instances: "+str(id))
                 for element in id:
                     logger.debug("List of "+str(element))
-                    endpoint = "v1/inputs/dataset/" + element
+                    for key in element.keys():
+                        element_id=element[key]
+                    endpoint = "v1/inputs/dataset/" + element_id
                     response = self.connection.send_request("GET", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
 
-                    endpoint = "v1/inputs/mqtt/" + element
+                    endpoint = "v1/inputs/mqtt/" + element_id
                     response = self.connection.send_request("GET", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
+        elif "all" in all:
+            payload = ""
 
+            headers = {
+                'Content-Type': "application/json",
+                'cache-control': "no-cache"
+            }
+
+            endpoint = "v1/inputs/dataset"
+            response = self.connection.send_request("GET", endpoint, payload, headers)
+            logger.debug(json.dumps(response, indent=4, sort_keys=True))
+
+            endpoint = "v1/inputs/mqtt"
+            response = self.connection.send_request("GET", endpoint, payload, headers)
+            logger.debug(json.dumps(response, indent=4, sort_keys=True))
+
+        elif "ids" in all:
+            payload = ""
+
+            headers = {
+                'Content-Type': "application/json",
+                'cache-control': "no-cache"
+            }
+            endpoint = "v1/inputs/dataset/ids"
+            response = self.connection.send_request("GET", endpoint, payload, headers)
+            #logger.debug(json.dumps(response, indent=4, sort_keys=True))
+            return response
         else:
             logger.error("No ids to list")
             sys.exit(0)
 
     def delete(self, id):
-        logger.debug("Delete input "+str(id))
+        #logger.debug("Delete input "+str(id))
         if id is not None:
             payload = ""
 
@@ -105,17 +139,24 @@ class Data_source:
                     logger.debug("List of the following instances: "+str(id))
                     for element in id:
                         #logger.debug("List of "+str(element))
-                        self.element_to_erase =element
+                        for key in element.keys():
+                            self.element_to_erase = element[key]
 
-                        endpoint = "v1/inputs/dataset/" + element
+                        logger.debug("element to erase "+str(self.element_to_erase) + " type "+str(type(self.element_to_erase)))
+                        #self.element_to_erase =element
+                        path = self.command_to_execute["host"] + "-" + self.id_path
+                        path = os.path.join(self.folder_path, path)
+
+                        endpoint = "v1/inputs/dataset/" + self.element_to_erase
                         response = self.connection.send_request("DELETE", endpoint, payload, headers)
                         logger.debug(json.dumps(response, indent=4, sort_keys=True))
-                        self.util.erase_id(self.id_path,element,self.command_to_execute["host"])
+                        self.util.erase_id(path,self.element_to_erase)
 
-                        endpoint = "v1/inputs/mqtt/" + element
-                        response = self.connection.send_request("DELETE", endpoint, payload, headers)
-                        logger.debug(json.dumps(response, indent=4, sort_keys=True))
-                        self.util.erase_id(self.id_path, element,self.command_to_execute["host"])
+                        if not "success" in response:
+                            endpoint = "v1/inputs/mqtt/" + self.element_to_erase
+                            response = self.connection.send_request("DELETE", endpoint, payload, headers)
+                            logger.debug(json.dumps(response, indent=4, sort_keys=True))
+                            self.util.erase_id(path, self.element_to_erase)
 
                 except Exception as e:
                     self.util.erase_id(self.id_path,self.element_to_erase,self.command_to_execute["host"])
@@ -128,13 +169,25 @@ class Data_source:
 
     def add(self, filepath, id=None, instance_name=None):
         logger.debug("Add inputs")
-        #project_dir = os.path.dirname(os.path.abspath(__file__))
 
-        #if os.path.isabs(filepath):
-            #data_file = filepath
-        #else:
-            #data_file = os.path.join(project_dir, filepath)
-
+        path = self.command_to_execute["host"] + "-" + self.id_path
+        path = os.path.join(self.folder_path, path)
+        if not self.util.isFile(path):
+            ids=self.list(None,"ids")
+            logger.debug("ids "+str(ids))
+            ids_to_store=[]
+            ids_dict={}
+            import copy
+            for element in ids:
+                logger.debug("element "+str(element))
+                ids_dict["None"]=element
+                logger.debug("ids_dict_elemet " + str(ids_dict))
+                ids_to_store=copy.deepcopy(ids_to_store)
+                ids_to_store.append(ids_dict)
+                logger.debug("ids to store element " + str(ids_to_store))
+            logger.debug("ids dict " + str(ids_dict))
+            logger.debug("ids to store "+str(ids_to_store))
+            self.util.store(path,ids_to_store)
         payload=""
         try:
             with open(filepath,"r") as myfile:
@@ -178,77 +231,13 @@ class Data_source:
                     logger.debug("Id: " + json.dumps(response, indent=4, sort_keys=True))
                     folder="config"
                     path = self.command_to_execute["host"] + "-" + self.id_path
-                    os.path.join(folder,path)
+                    path=os.path.join(folder,path)
                     data = {}
-                    data[instance_name]= response
-                    self.util.store(path,data)
+                    data[str(instance_name)]= response
+                    #df=pd.DataFrame(data)
+                    self.util.store(path,[data])
+
+                    #self.util.store(path)
             except Exception as e:
                 logger.error(e)
                 sys.exit(0)
-    """
-    def store(self, path, data, host):
-        path=host+"-"+path
-        if os.path.isfile(path):
-            data_to_store = "\n" + data
-            with open(path, 'a+') as outfile:
-                outfile.write(data_to_store)
-        else:
-            with open(path, 'w') as outfile:
-                outfile.write(data)
-
-        logger.debug("input data saved into memory")
-
-    def get_id(self, path, number, host):
-        path = host + "-" + path
-        #logger.debug("path "+path)
-        if os.path.isfile(path):
-            #logger.debug("Path exists")
-            with open(path, "r") as myfile:
-                id = myfile.read().splitlines()
-        else:
-            id=None
-        #logger.debug("Ids present in this session: " + str(id))
-        #if id is not None:
-            #logger.debug("Working id " + str(id[-1]))
-
-        #logger.debug("number  "+str(number))
-        if number is not None:
-            if "all" in number:
-                return id
-            else:
-                logger.error("Please write all or give the id")
-                sys.exit(0)
-        else:
-            if id is not None:
-                return [id[-1]]
-            else:
-                return None
-
-
-    def erase_id(self, path, id, host):
-        path_new = host + "-" + path
-        #logger.debug("path "+str(path_new))
-        if os.path.isfile(path_new):
-            try:
-                id_from_file = self.get_id(path,"all", self.command_to_execute["host"])
-                #logger.debug("id_from_file "+str(id_from_file))
-                values=[]
-                for element in id_from_file:
-                    #logger.debug("element "+str(element))
-                    if not id in element:
-                        values.append(element)
-                logger.debug("values "+str(values))
-                if len(values)==0:
-                    os.remove(path_new)
-                    logger.debug("File "+path_new+" erased")
-                else:
-                    with open(path_new, 'w') as outfile:
-                        counter=0
-                        for item in values:
-                            if counter==0:
-                                outfile.write("%s" % item)
-                                counter=1
-                            else:
-                                outfile.write("\n%s" % item)
-            except Exception as e:
-                logger.error(e)"""

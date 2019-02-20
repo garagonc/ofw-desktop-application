@@ -20,6 +20,7 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', le
 logger = logging.getLogger(__file__)
 
 host_path="hostname.config"
+folder_path="config"
 
 def vararg_callback_1(option, opt_str, value, parser):
     assert value is None
@@ -209,7 +210,9 @@ def parser():
     instance = {"add": opts.instance_add, "list": opts.instance_list, "delete": opts.instance_delete}
 
     utils=Utils()
-    host = utils.get_host(host_path)
+    utils.createFolderPath(folder_path)
+    path=os.path.join(folder_path,host_path)
+    host = utils.get_host(path)
     if (tgtHost == None):
         logger.debug("host "+str(host))
         if host is None:
@@ -218,7 +221,7 @@ def parser():
         else:
             tgtHost = host
     else:
-        utils.store(host_path, tgtHost)
+        utils.store(path, tgtHost)
 
 
     if (tgtPort == None):
@@ -256,6 +259,7 @@ if __name__ == '__main__':
             logger.debug("Executing the command model")
             model = Models()
             model.execute(http, command_to_execute)
+
 
     for key, value in command_to_execute["data_source"].items():
         if value is not None:
