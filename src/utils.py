@@ -5,7 +5,9 @@ Created on Jan 25 17:53 2019
 """
 
 import os
-import logging, os, sys
+import logging
+import os
+import sys
 import ntpath
 import re
 import json
@@ -16,6 +18,7 @@ import xlsxwriter as xl
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
+
 
 class Utils:
 
@@ -53,35 +56,33 @@ class Utils:
         else:
             return False
 
-    def deleteFile(self,path):
+    def deleteFile(self, path):
         os.remove(path)
 
-    def getFolderPath(self,path):
+    def getFolderPath(self, path):
         return os.path.dirname(os.path.abspath(path))
 
-    def collect_store_ids_from_ofw(self,path):
+    def collect_store_ids_from_ofw(self, path):
         if not self.util.isFile(path):
-            ids=self.list(None,"ids")
+            ids = self.list(None, "ids")
 
             ids_to_store = []
             for element in ids:
                 ids_dict = {}
-                ids_dict["None"]=  [{"None": element}]
+                ids_dict["None"] = [{"None": element}]
                 ids_to_store.append(ids_dict)
-            self.util.store(path,ids_to_store)
-
-
+            self.util.store(path, ids_to_store)
 
     def store(self, path, data_list_of_dicts):
-        folder_path=self.getFolderPath(path)
+        folder_path = self.getFolderPath(path)
         self.createFolderPath(folder_path)
 
         if os.path.isfile(path):
             if isinstance(data_list_of_dicts, list):
                 #logger.debug("entered to the dict")
-                ids=self.get_id(path,"all")
+                ids = self.get_id(path, "all")
                 #logger.debug("ids " + str(ids))
-                ids_to_store=[]
+                ids_to_store = []
 
                 for element in ids:
                     #logger.debug("element "+str(element))
@@ -96,15 +97,14 @@ class Utils:
         else:
             if isinstance(data_list_of_dicts, list):
                 with open(path, 'w') as outfile:
-                    ids=data_list_of_dicts
+                    ids = data_list_of_dicts
                     outfile.write(json.dumps(ids, indent=4, sort_keys=True))
-
 
         logger.debug("input data saved in "+str(path))
 
     def store_as_excel(self, path, data, id):
         try:
-            folder_path=self.getFolderPath(path)
+            folder_path = self.getFolderPath(path)
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
             # Create a Pandas dataframe from the data.
@@ -115,7 +115,7 @@ class Utils:
             df.to_excel(writer, sheet_name='Sheet1')
             # Close the Pandas Excel writer and output the Excel file.
             writer.save()
-            msg= "stored in "+str(path)
+            msg = "stored in "+str(path)
             return msg
         except Exception as e:
             logger.error(e)
@@ -135,7 +135,7 @@ class Utils:
                 id = json.load(myfile)
                 #logger.debug("id "+str(id))
         else:
-            id=None
+            id = None
 
         if number is not None:
             if "all" in number:
@@ -145,32 +145,32 @@ class Utils:
                 sys.exit(0)
         elif model_name_input is not None:
             if id is not None:
-                dict_1={}
+                dict_1 = {}
                 for list_1 in id:
                     logger.debug("List of " + str(list_1))
                     for model_name in list_1.keys():
                         if model_name_input in model_name:
                             logger.debug("model_name " + str(model_name))
-                            dict_1[model_name]=list_1[model_name]
+                            dict_1[model_name] = list_1[model_name]
                 logger.debug("dict_1 " + str(dict_1))
                 return [dict_1]
             else:
                 return None
         else:
             if id is not None:
-                dict_1=id[-1]
-                list_1=[]
+                dict_1 = id[-1]
+                list_1 = []
                 for key in dict_1.keys():
-                    if len(dict_1[key])>1:
+                    if len(dict_1[key]) > 1:
                         list_1.append(dict_1[key][-1])
-                        dict_1[key]=list_1
+                        dict_1[key] = list_1
                 logger.debug("dict_1 " + str(id[-1]))
                 return [dict_1]
             else:
                 return None
 
     def get_id_list(self, data):
-        data_to_return=[]
+        data_to_return = []
         for list_1 in data:
             logger.debug("List of " + str(list_1))
             for model_name in list_1.keys():
@@ -183,14 +183,14 @@ class Utils:
         return data_to_return
 
     def erase_id(self, path, id, model_name_input=None):
-        path_new =  path
+        path_new = path
         #logger.debug("id to erase "+str(id))
         if os.path.isfile(path_new):
             try:
                 if id is not None:
                     logger.debug("Entered to id")
-                    id_from_file = self.get_id(path,"all")
-                    values=[]
+                    id_from_file = self.get_id(path, "all")
+                    values = []
                     for list_1 in id_from_file:
                         for model_name in list_1.keys():
                             instance_dict = {}
@@ -202,11 +202,11 @@ class Utils:
                                     if not id in element_to_compare:
                                         values_list_2.append(list_2)
                                         #logger.debug("values_list_2 " + str(values_list_2))
-                            instance_dict[model_name]=values_list_2
+                            instance_dict[model_name] = values_list_2
                             #logger.debug("instance dict "+str(instance_dict))
-                            if len(instance_dict)>0:
+                            if len(instance_dict) > 0:
                                 values.append(instance_dict)
-                            #logger.debug("values " + str(values)
+                            # logger.debug("values " + str(values)
 
                 elif model_name_input is not None:
                     logger.debug("Entered to model_name")
@@ -215,11 +215,11 @@ class Utils:
                     for list_1 in id_from_file:
                         for model_name in list_1.keys():
                             instance_dict = {}
-                            logger.debug("model_name "+str(model_name)+ " model_name_input "+str(model_name_input) )
+                            logger.debug("model_name "+str(model_name) + " model_name_input "+str(model_name_input))
                             if not model_name_input in model_name:
                                 instance_dict[model_name] = list_1[model_name]
                             logger.debug("instance dict "+str(instance_dict)+" len "+str(len(instance_dict)))
-                            if len(instance_dict)>0:
+                            if len(instance_dict) > 0:
                                 values.append(instance_dict)
                             logger.debug("values " + str(values))
 
@@ -320,3 +320,164 @@ class Utils:
                                     sheet.merge_range(first_row, cell_col_num + 1,
                                                       last_row, cell_col_num + 1,
                                                       "", cell_format)
+
+    def read_data_from_xlsx_instance_config(self, filepath):
+        """Reads data from excel config file, parses it, and returns it as dict
+
+        Arguments:
+            filepath {str} -- Filepath to the excel config file
+
+        Returns:
+            dict -- Python dict of inputs, outputs, and start config
+        """
+        if not os.path.isfile(filepath):
+            print(f"Error: Excel file at {filepath} is missing")
+            return
+
+        # Read file
+        excel_data = pd.read_excel(filepath, sheet_name=None)
+
+        # Extract inputs sheet
+        inputs = excel_data["inputs"]
+        inputs.drop(labels=["Description", inputs.columns[3]], axis=1, inplace=True)
+        inputs[inputs.isna()] = "empty_input_values"
+
+        generic_input_mqtt = {}
+        generic_input_dataset = {}
+        input_fields = []
+
+        # Extract data from input sheet and store as dict
+        for row_num in range(0, len(inputs), 3):
+            input_value_name = inputs.loc[row_num]["Input_name"]
+            input_fields.append(input_value_name)
+
+            input_values = inputs.loc[row_num][1:]
+
+            for key, value in input_values.items():
+                if value == "empty_input_values":
+                    continue
+
+                if "MQTT params" in key:
+                    host = inputs.loc[row_num]["or MQTT params"]
+                    topic = inputs.loc[row_num+1]["or MQTT params"]
+                    qos = inputs.loc[row_num+2]["or MQTT params"]
+
+                    if input_value_name in generic_input_mqtt:
+                        print(
+                            f"ERROR: Duplicate values: \
+                                Please fill only one column for {input_value_name} in inputs sheet")
+                        return
+
+                    if (host != "empty_input_values"
+                            and topic != "empty_input_values"
+                            and qos != "empty_input_values"):
+                        generic_input_mqtt[input_value_name] = {
+                            "mqtt": {
+                                "qos": qos,
+                                "host": host,
+                                "topic": topic
+                            }
+                        }
+                    else:
+                        print(f"ERROR: \
+                                    MQTT params for {input_value_name} in inputs sheet is missing.")
+                        return
+
+                    continue
+
+                if "filename" in key:
+                    if os.path.isfile(value):
+                        data_from_file = pd.read_excel(f"./{value}", header=None)
+
+                        if input_value_name in generic_input_dataset:
+                            print(f"ERROR: Duplicate values: \
+                                        Please fill only one column for {input_value_name}")
+                            return
+
+                        processed_data_from_file = data_from_file[data_from_file.columns[0]]
+                        generic_input_dataset[input_value_name] = processed_data_from_file.tolist()
+                    else:
+                        print(
+                            f"ERROR: Filename {value} provided for input {input_value_name} \
+                                in inputs sheet is missing. Please check again")
+                        return
+                    continue
+
+                if input_value_name in generic_input_mqtt:
+                    print(
+                        f"ERROR: Duplicate values: \
+                            Please fill only one column for {input_value_name} in inputs sheet")
+                    return
+
+                generic_input_mqtt[input_value_name] = value
+
+        filled_inputs = set(generic_input_mqtt).union(set(generic_input_dataset))
+        missing_inputs = set(input_fields).difference(filled_inputs)
+
+        for input_name in missing_inputs:
+            print(f"ERROR: {input_name} field in inputs sheet is missing")
+            return
+
+        # Extract outputs sheet
+        outputs = excel_data["outputs"].drop(labels=["Description"], axis=1)
+        outputs.drop(outputs.columns[1], axis=1, inplace=True)
+        outputs[outputs.isna()] = "empty_input_values"
+
+        generic_output_data = {}
+        output_fields = []
+
+        # Extract data from output sheet and store as dict
+        for row_num in range(0, len(outputs), 3):
+            output_value_name = outputs.loc[row_num]["Output_name"]
+            output_fields.append(output_value_name)
+
+            host = outputs.loc[row_num]["MQTT params"]
+            topic = outputs.loc[row_num+1]["MQTT params"]
+            qos = outputs.loc[row_num+2]["MQTT params"]
+
+            if (host != "empty_input_values"
+                    and topic != "empty_input_values"
+                    and qos != "empty_input_values"):
+                generic_output_data[output_value_name] = {
+                    "mqtt": {
+                        "qos": qos,
+                        "host": host,
+                        "topic": topic
+                    }
+                }
+            else:
+                print(f"ERROR: MQTT params for {output_value_name} in inputs sheet is missing.")
+                return
+
+        missing_outputs = set(output_fields).difference(set(generic_output_data))
+        for output_name in missing_outputs:
+            print(f"ERROR: {output_name} field in outputs sheet is missing")
+            return
+
+        # Extract data from start sheet and store it as dict
+        start_config = excel_data["start"].drop(labels=["Description"], axis=1)
+        start_config[start_config.isna()] = "empty_input_values"
+
+        generic_start_config_data = {}
+        for i, row in start_config.iterrows():
+            config_name = row["configs"]
+            config_value = row["Value"]
+            if config_value != "empty_input_values":
+                generic_start_config_data[config_name] = config_value
+            else:
+                print(f"ERROR: {config_name} field in start config sheet is missing")
+                return
+
+        # Store all data in a dict
+        data_from_xlsx = {
+            "inputs": {
+                "dataset": generic_input_dataset,
+                "mqtt": generic_input_mqtt
+            },
+            "outputs": {
+                "generic": generic_output_data
+            },
+            "start": generic_start_config_data
+        }
+
+        return data_from_xlsx
