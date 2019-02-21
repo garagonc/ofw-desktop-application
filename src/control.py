@@ -74,10 +74,9 @@ class Data_output:
 
             if isinstance(id,list):
                 logger.debug("List of the following instances: "+str(id))
-                for element in id:
-                    logger.debug("List of "+str(element))
-                    for key in element.keys():
-                        element_id=element[key]
+                id_list = self.util.get_id_list(id)
+                logger.debug("id list " + str(id_list))
+                for element_id in id_list:
                     endpoint = "v1/outputs/" + element_id
                     response = self.connection.send_request("GET", endpoint, payload, headers)
                     df = pd.DataFrame(response)
@@ -106,10 +105,9 @@ class Data_output:
 
             if isinstance(id,list):
                 logger.debug("List of the following instances: "+str(id))
-                for element in id:
-                    #logger.debug("List of "+str(element))
-                    for key in element.keys():
-                        self.element_to_erase = element[key]
+                id_list = self.util.get_id_list(id)
+                logger.debug("id list " + str(id_list))
+                for self.element_to_erase in id_list:
 
                     endpoint = "v1/outputs/mqtt/" + self.element_to_erase
                     response = self.connection.send_request("DELETE", endpoint, payload, headers)

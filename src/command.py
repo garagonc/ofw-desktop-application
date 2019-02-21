@@ -134,13 +134,11 @@ class Command:
 
             logger.debug("Restarting the following instances: " + str(id))
             instance_status = {}
-            for element in id:
-                for key in element.keys():
-                    element_id = element[key]
-                #logger.debug("id " + str(element))
-
+            id_list = self.util.get_id_list(id)
+            logger.debug("id list " + str(id_list))
+            for element_id in id_list:
                 status = self.status()
-                #logger.debug("status "+ str(status))
+
                 if status:
                     for key1, body in status["status"].items():
                         for key, value in body.items():
@@ -191,9 +189,9 @@ class Command:
             #logger.debug("id "+str(id)+" type "+str(type(id)))
             if isinstance(id,list):
                 logger.debug("Starting the following instances: "+str(id))
-                for element in id:
-                    for key in element.keys():
-                        element_id=element[key]
+                id_list = self.util.get_id_list(id)
+                logger.debug("id list " + str(id_list))
+                for element_id in id_list:
                     #logger.debug("id "+str(element))
                     endpoint = "v1/optimization/start/" + str(element_id)
                     response = self.connection.send_request("PUT", endpoint, payload, headers)
@@ -219,10 +217,9 @@ class Command:
 
             if isinstance(id,list):
                 logger.debug("Stoping the following instances: "+str(id))
-                for element in id:
-                    for key in element.keys():
-                        element_id=element[key]
-                    #logger.debug("List of "+str(element))
+                id_list = self.util.get_id_list(id)
+                logger.debug("id list " + str(id_list))
+                for element_id in id_list:
                     endpoint = "v1/optimization/stop/" + element_id
                     response = self.connection.send_request("PUT", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
