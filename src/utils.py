@@ -11,12 +11,37 @@ import re
 import json
 import pandas as pd
 import copy
+import xlsxwriter as xl
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 
 class Utils:
+
+    def __init__(self):
+        self.sheets = ['inputs', 'outputs', 'start']
+        self.col_headers = {'inputs': ['Input_name',
+                                       'value',
+                                       'or filename',
+                                       '',
+                                       'or MQTT params',
+                                       'Description'],
+                            'outputs': ['Output_name',
+                                        '',
+                                        'MQTT params',
+                                        'Description'],
+                            'start': ['configs',
+                                      'Value',
+                                      'Description']}
+        self.default_cell_values = {'inputs': [['', '', 'url', '', ''],
+                                               ['', '', 'topic', '', ''],
+                                               ['', '', 'qos', '', '']],
+                                    'outputs': [['url', '', ''],
+                                                ['topic', '', ''],
+                                                ['qos', '', '']],
+                                    'start': [['', '']]
+                                    }
 
     def createFolderPath(self, folder_path):
         if not os.path.exists(folder_path):
@@ -206,3 +231,92 @@ class Utils:
                     self.store(path, values)
             except Exception as e:
                 logger.error(e)
+
+    def generate_xlsx_instance_config(self, data, filepath):
+        """Generate excel sheet for instance configuration
+
+        Arguments:
+            data {dict} -- Input data with list of config to be filled
+            filepath {str} -- File path of the excel file to be created
+        """
+        if os.path.isfile(filepath):
+            logger.error("File already exists. Cannot overwrite file")
+        else:
+
+            with xl.Workbook(filepath) as workbook:
+
+                row_header_format = workbook.add_format({'align': 'center',
+                                                         'bold': True,
+                                                         'valign': 'vcenter'})
+                col_header_format = workbook.add_format({'align': 'center',
+                                                         'bold': True,
+                                                         'valign': 'vcenter'})
+                cell_format = workbook.add_format()
+
+                # Formatting information
+                border_size = 2
+                col_header_width = 30
+                normal_col_width = 20
+                short_col_width = 5
+
+                row_header_format.set_border(border_size)
+                col_header_format.set_border(border_size)
+                cell_format.set_border(border_size)
+
+                # Generate worksheets and format
+                for worksheet_name in self.sheets:
+                    sheet = workbook.add_worksheet(worksheet_name)
+
+                    # Create column headers
+                    col_header = self.col_headers[worksheet_name]
+                    for col_num, col_value in enumerate(col_header):
+                        sheet.write(0, col_num,
+                                    col_value, col_header_format)
+
+                        # Column formatting
+                        sheet.set_column(col_num, col_num, normal_col_width)
+
+                        # Widen first column
+                        if col_num == 0:
+                            sheet.set_column(col_num, col_num, col_header_width)
+                        # Shorten empty column
+                        if col_value == "":
+                            sheet.set_column(col_num, col_num, short_col_width)
+
+                    # Create row headers and format rows based on default inputs
+                    row_header = data[worksheet_name]
+                    cell_values = self.default_cell_values[worksheet_name]
+                    for row_num, row_value in enumerate(row_header):
+
+                        # Different formatting for start config sheet
+                        if worksheet_name == "start":
+                            sheet.write(row_num + 1, 0,
+                                        row_value, cell_format)
+
+                            for cell_row_num, cell_row in enumerate(cell_values):
+                                for cell_col_num, cell_value in enumerate(cell_row):
+                                    sheet.write(cell_row_num + row_num + 1,
+                                                cell_col_num + 1,
+                                                cell_value, cell_format)
+                            # skip the rest of the code for start config
+                            continue
+
+                        # Merge every three cells for row header
+                        first_row = 1 + (row_num * 3)
+                        last_row = first_row + 2
+                        sheet.merge_range(first_row, 0,
+                                          last_row, 0,
+                                          row_value, row_header_format)
+
+                        for cell_row_num, cell_row in enumerate(cell_values):
+                            for cell_col_num, cell_value in enumerate(cell_row):
+                                # Get col name and set formatting per row or per merged range
+                                col_header_name = col_header[cell_col_num + 1]
+
+                                if "MQTT" in col_header_name or col_header_name == "":
+                                    sheet.write(cell_row_num + first_row, cell_col_num + 1,
+                                                cell_value, cell_format)
+                                else:
+                                    sheet.merge_range(first_row, cell_col_num + 1,
+                                                      last_row, cell_col_num + 1,
+                                                      "", cell_format)

@@ -11,6 +11,7 @@ import re
 import json
 import pandas
 from src.models import Models
+from src.utils import Utils
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
@@ -81,21 +82,23 @@ class Instance:
 
 
     def add(self, instance_name,model_name):
+        self.util=Utils()
         logger.debug("Adding an instance")
         logger.debug("Instance name "+str(instance_name))
         logger.debug("Model name "+str(model_name))
         folder="instances"
         filename="instance_name.xlsx"
         folder_path=os.path.join(folder,model_name)
-        path = os.path.join(folder,model_name,instance_name)
+        path = os.path.join(folder,model_name,instance_name)+".xlsx"
         logger.debug("path "+str(path))
         try:
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
             #Call a function that reads the input, outputs from model_name and start parameters
             data=self.readInputsOutputs(model_name)
-            #ToDo Call a function that inserts the inputs and output information and generates a muster instance_name.xlsx
-
+            #Call a function that inserts the inputs and output information and generates a muster instance_name.xlsx
+            #logger.debug("data "+str(data))
+            self.util.generate_xlsx_instance_config(data,path)
             logger.debug("File "+str(path)+" created")
         except Exception as e:
             logger.error(e)
