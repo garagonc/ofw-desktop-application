@@ -69,7 +69,7 @@ class Utils:
     def delete_files_instances(self, id_list):
         for element in id_list:
             for model_name in element.keys():
-                logger.debug("element "+str(element))
+                #logger.debug("element "+str(element))
                 instance_name=self.get_instance_name([element])
                 model_name = model_name
                 folder = "instances"
@@ -202,7 +202,7 @@ class Utils:
                 instance_name_input {str} -- instance_name to erase. Possible "all"
         """
 
-        logger.debug("getting id")
+        #logger.debug("getting id")
         if os.path.isfile(path):
             with open(path, "r") as myfile:
                 id = json.load(myfile)
@@ -230,8 +230,8 @@ class Utils:
                         if not "None" in model_name:
                             # logger.debug("model_name " + str(model_name))
                             dict_1[model_name] = list_1[model_name]
-                logger.debug("dict_1 " + str(dict_1))
-                logger.debug("len dict_1 " + str(len(dict_1)))
+                #logger.debug("dict_1 " + str(dict_1))
+                #logger.debug("len dict_1 " + str(len(dict_1)))
                 if len(dict_1) > 0:
                     return [dict_1]
                 else:
@@ -239,29 +239,29 @@ class Utils:
             else:
                 #returns last id used with the given model_name
                 if instance_name_input is None:
-                    logger.debug("Instance name not present")
+                    #logger.debug("Instance name not present")
                     dict_1={}
                     for element in id:
-                        logger.debug("element "+str(element))
+                        #logger.debug("element "+str(element))
                         if model_name_input in element.keys():
-                            logger.debug("1")
+
                             dict_1 = element
                     if len(dict_1) == 0:
-                        logger.debug("2")
+
                         return None
 
                     list_1 = []
                     for key in dict_1.keys():
-                        logger.debug("3")
+
                         if len(dict_1[key]) > 1:
-                            logger.debug("4")
+
                             list_1.append(dict_1[key][-1])
                             dict_1[key] = list_1
-                    logger.debug("dict_1 "+str(dict_1))
+                    #logger.debug("dict_1 "+str(dict_1))
                     return [dict_1]
 
                 else:
-                    logger.debug("Instance name and model_name present")
+                    #logger.debug("Instance name and model_name present")
                     #logger.debug("id "+str(id))
 
                     #return all the ids for the given model name
@@ -275,8 +275,8 @@ class Utils:
                                 if model_name_input == model_name:
                                     # logger.debug("model_name " + str(model_name))
                                     dict_1[model_name] = list_1[model_name]
-                        logger.debug("dict_1 " + str(dict_1))
-                        logger.debug("len dict_1 " + str(len(dict_1)))
+                        #logger.debug("dict_1 " + str(dict_1))
+                        #logger.debug("len dict_1 " + str(len(dict_1)))
                         if len(dict_1) > 0:
                             return [dict_1]
                         else:
@@ -298,14 +298,14 @@ class Utils:
                                         for instance_name in element.keys():
                                             if instance_name_input == instance_name:
                                                 list_id.append(element)
-                                                logger.debug("list_id " + str(list_id))
+                                                #logger.debug("list_id " + str(list_id))
                                     if len(list_id)>0:
                                         dict_1[model_name] = list_id
                                     else:
                                         return None
 
-                        logger.debug("dict_1 " + str(dict_1))
-                        logger.debug("len dict_1 " + str(len(dict_1)))
+                        #logger.debug("dict_1 " + str(dict_1))
+                        #logger.debug("len dict_1 " + str(len(dict_1)))
                         if len(dict_1) > 0:
                             return [dict_1]
                         else:
@@ -320,22 +320,25 @@ class Utils:
                 if len(dict_1[key])>1:
                     list_1.append(dict_1[key][-1])
                     dict_1[key]=list_1
-            logger.debug("dict_1 " + str(id[-1]))
+            #logger.debug("dict_1 " + str(id[-1]))
             return [dict_1]
 
 
     def get_id_list(self, data):
         data_to_return=[]
-        for list_1 in data:
-            #logger.debug("List of " + str(list_1))
-            for model_name in list_1.keys():
-                #logger.debug("model_name " + str(model_name))
-                for list_2 in list_1[model_name]:
-                    for instance_name in list_2.keys():
-                        element_id = list_2[instance_name]
-                        #logger.debug("id " + str(element_id) + " instance_name " + str(instance_name))
-                        data_to_return.append(element_id)
-        return data_to_return
+        if data is not None:
+            for list_1 in data:
+                #logger.debug("List of " + str(list_1))
+                for model_name in list_1.keys():
+                    #logger.debug("model_name " + str(model_name))
+                    for list_2 in list_1[model_name]:
+                        for instance_name in list_2.keys():
+                            element_id = list_2[instance_name]
+                            #logger.debug("id " + str(element_id) + " instance_name " + str(instance_name))
+                            data_to_return.append(element_id)
+            return data_to_return
+        else:
+            return None
 
     def is_model_name(self, data_to_compare,  model_name_input):
         #logger.debug("data_to_compare "+str(data_to_compare)+" type "+str(type(data_to_compare)))
@@ -384,10 +387,10 @@ class Utils:
                                                 values_list_2.append(list_2)
                                         dict_add={str(instance_name_input):id}
                                         values_list_2.append(dict_add)
-                                        logger.debug("values_list_2 "+str(values_list_2))
+                                        #logger.debug("values_list_2 "+str(values_list_2))
                                         list_1[model_name] =values_list_2
-                                        logger.debug("list_1 " + str(list_1))
-                            logger.debug("id_from_file " + str(id_from_file))
+                                        #logger.debug("list_1 " + str(list_1))
+                            #logger.debug("id_from_file " + str(id_from_file))
 
                             return id_from_file
                         else:
