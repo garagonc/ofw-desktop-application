@@ -5,13 +5,7 @@ Created on Jan 25 17:53 2019
 """
 
 import os
-<<<<<<< HEAD
-import logging
-import os
-import sys
-=======
 import logging, os, sys, shutil
->>>>>>> gustavo
 import ntpath
 import re
 import json
@@ -23,7 +17,6 @@ import xlsxwriter as xl
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
-
 
 class Utils:
 
@@ -61,10 +54,6 @@ class Utils:
         else:
             return False
 
-<<<<<<< HEAD
-    def deleteFile(self, path):
-        os.remove(path)
-=======
     def deleteFile(self,path):
         if self.isFile(path):
             try:
@@ -148,57 +137,17 @@ class Utils:
                 return False
             if not files or dirnames:
                 return True
->>>>>>> gustavo
 
-    def getFolderPath(self, path):
+    def getFolderPath(self,path):
         return os.path.dirname(os.path.abspath(path))
 
-<<<<<<< HEAD
-    def collect_store_ids_from_ofw(self, path):
-        if not self.util.isFile(path):
-            ids = self.list(None, "ids")
-
-            ids_to_store = []
-            for element in ids:
-                ids_dict = {}
-                ids_dict["None"] = [{"None": element}]
-                ids_to_store.append(ids_dict)
-            self.util.store(path, ids_to_store)
-=======
 
 
->>>>>>> gustavo
 
     def store(self, path, data_list_of_dicts):
-        folder_path = self.getFolderPath(path)
+        folder_path=self.getFolderPath(path)
         self.createFolderPath(folder_path)
 
-<<<<<<< HEAD
-        if os.path.isfile(path):
-            if isinstance(data_list_of_dicts, list):
-                #logger.debug("entered to the dict")
-                ids = self.get_id(path, "all")
-                #logger.debug("ids " + str(ids))
-                ids_to_store = []
-
-                for element in ids:
-                    #logger.debug("element "+str(element))
-                    ids_to_store.append(element)
-                for element in data_list_of_dicts:
-                    #logger.debug("element " + str(element))
-                    ids_to_store.append(element)
-
-                #logger.debug("ids "+str(ids_to_store))
-                with open(path, 'w') as outfile:
-                    outfile.write(json.dumps(ids_to_store, indent=4, sort_keys=True))
-        else:
-            if isinstance(data_list_of_dicts, list):
-                with open(path, 'w') as outfile:
-                    ids = data_list_of_dicts
-                    outfile.write(json.dumps(ids, indent=4, sort_keys=True))
-
-        logger.debug("input data saved in "+str(path))
-=======
         if isinstance(data_list_of_dicts, list):
             with open(path, 'w') as outfile:
                 ids = data_list_of_dicts
@@ -207,11 +156,10 @@ class Utils:
 
 
 
->>>>>>> gustavo
 
     def store_as_excel(self, path, data, id):
         try:
-            folder_path = self.getFolderPath(path)
+            folder_path=self.getFolderPath(path)
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
             # Create a Pandas dataframe from the data.
@@ -222,7 +170,7 @@ class Utils:
             df.to_excel(writer, sheet_name='Sheet1')
             # Close the Pandas Excel writer and output the Excel file.
             writer.save()
-            msg = "stored in "+str(path)
+            msg= "stored in "+str(path)
             return msg
         except Exception as e:
             logger.error(e)
@@ -262,13 +210,9 @@ class Utils:
                     return None
                 #logger.debug("id "+str(id))
         else:
-<<<<<<< HEAD
-            id = None
-=======
             return None
 
 
->>>>>>> gustavo
 
         if number is not None:
             if "all" in number:
@@ -278,22 +222,13 @@ class Utils:
                 sys.exit(0)
 
         elif model_name_input is not None:
-<<<<<<< HEAD
-            if id is not None:
-=======
             if "all" in model_name_input:
->>>>>>> gustavo
                 dict_1 = {}
                 for list_1 in id:
                     # logger.debug("List of " + str(list_1))
                     for model_name in list_1.keys():
-<<<<<<< HEAD
-                        if model_name_input in model_name:
-                            logger.debug("model_name " + str(model_name))
-=======
                         if not "None" in model_name:
                             # logger.debug("model_name " + str(model_name))
->>>>>>> gustavo
                             dict_1[model_name] = list_1[model_name]
                 logger.debug("dict_1 " + str(dict_1))
                 logger.debug("len dict_1 " + str(len(dict_1)))
@@ -379,19 +314,6 @@ class Utils:
 
 
         else:
-<<<<<<< HEAD
-            if id is not None:
-                dict_1 = id[-1]
-                list_1 = []
-                for key in dict_1.keys():
-                    if len(dict_1[key]) > 1:
-                        list_1.append(dict_1[key][-1])
-                        dict_1[key] = list_1
-                logger.debug("dict_1 " + str(id[-1]))
-                return [dict_1]
-            else:
-                return None
-=======
             dict_1=id[-1]
             list_1=[]
             for key in dict_1.keys():
@@ -401,10 +323,9 @@ class Utils:
             logger.debug("dict_1 " + str(id[-1]))
             return [dict_1]
 
->>>>>>> gustavo
 
     def get_id_list(self, data):
-        data_to_return = []
+        data_to_return=[]
         for list_1 in data:
             #logger.debug("List of " + str(list_1))
             for model_name in list_1.keys():
@@ -534,9 +455,6 @@ class Utils:
 
     #enters one id
     def erase_id(self, path, id, model_name_input=None):
-<<<<<<< HEAD
-        path_new = path
-=======
         """Erase one id from the id.config file
 
                 Arguments:
@@ -545,21 +463,14 @@ class Utils:
                     model_name_input {str} -- model_name to erase
                 """
         path_new =  path
->>>>>>> gustavo
         #logger.debug("id to erase "+str(id))
         if os.path.isfile(path_new):
             try:
                 id_from_file = self.get_id(path, "all")
                 #logger.debug("id from file "+str(id_from_file))
                 if id is not None:
-<<<<<<< HEAD
-                    logger.debug("Entered to id")
-                    id_from_file = self.get_id(path, "all")
-                    values = []
-=======
                     #logger.debug("Entered to id")
                     values=[]
->>>>>>> gustavo
                     for list_1 in id_from_file:
                         for model_name in list_1.keys():
                             instance_dict = {}
@@ -571,20 +482,12 @@ class Utils:
                                     if not id in element_to_compare:
                                         values_list_2.append(list_2)
                                         #logger.debug("values_list_2 " + str(values_list_2))
-<<<<<<< HEAD
-                            instance_dict[model_name] = values_list_2
-=======
                             if len(values_list_2)>0:
                                 instance_dict[model_name]=values_list_2
->>>>>>> gustavo
                             #logger.debug("instance dict "+str(instance_dict))
-                            if len(instance_dict) > 0:
+                            if len(instance_dict)>0:
                                 values.append(instance_dict)
-<<<<<<< HEAD
-                            # logger.debug("values " + str(values)
-=======
                             #logger.debug("values " + str(values))
->>>>>>> gustavo
 
                 elif model_name_input is not None:
                     #logger.debug("Entered to model_name")
@@ -592,19 +495,11 @@ class Utils:
                     for list_1 in id_from_file:
                         for model_name in list_1.keys():
                             instance_dict = {}
-<<<<<<< HEAD
-                            logger.debug("model_name "+str(model_name) + " model_name_input "+str(model_name_input))
-                            if not model_name_input in model_name:
-                                instance_dict[model_name] = list_1[model_name]
-                            logger.debug("instance dict "+str(instance_dict)+" len "+str(len(instance_dict)))
-                            if len(instance_dict) > 0:
-=======
                             #logger.debug("model_name "+str(model_name)+ " model_name_input "+str(model_name_input) )
                             if not model_name_input in model_name:
                                 instance_dict[model_name] = list_1[model_name]
                             #logger.debug("instance dict "+str(instance_dict)+" len "+str(len(instance_dict)))
                             if len(instance_dict)>0:
->>>>>>> gustavo
                                 values.append(instance_dict)
                             #logger.debug("values " + str(values))
 
@@ -745,13 +640,8 @@ class Utils:
 
                 if "MQTT params" in key:
                     host = inputs.loc[row_num]["or MQTT params"]
-<<<<<<< HEAD
-                    topic = inputs.loc[row_num+1]["or MQTT params"]
-                    qos = inputs.loc[row_num+2]["or MQTT params"]
-=======
                     topic = inputs.loc[row_num + 1]["or MQTT params"]
                     qos = inputs.loc[row_num + 2]["or MQTT params"]
->>>>>>> gustavo
 
                     if input_value_name in generic_input_mqtt:
                         print(
@@ -823,13 +713,8 @@ class Utils:
             output_fields.append(output_value_name)
 
             host = outputs.loc[row_num]["MQTT params"]
-<<<<<<< HEAD
-            topic = outputs.loc[row_num+1]["MQTT params"]
-            qos = outputs.loc[row_num+2]["MQTT params"]
-=======
             topic = outputs.loc[row_num + 1]["MQTT params"]
             qos = outputs.loc[row_num + 2]["MQTT params"]
->>>>>>> gustavo
 
             if (host != "empty_input_values"
                     and topic != "empty_input_values"
@@ -876,8 +761,4 @@ class Utils:
             "start": generic_start_config_data
         }
 
-<<<<<<< HEAD
         return data_from_xlsx
-=======
-        return data_from_xlsx
->>>>>>> gustavo
