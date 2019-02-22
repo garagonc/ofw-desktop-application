@@ -247,8 +247,8 @@ if __name__ == '__main__':
         format:
         api_category command_name required args 
         eg:
-        data_source -add file_path      - for post
-        data_source -add file_path id   - for put
+        --input_add file_path      - for post
+        --input_add file_path id   - for put
     """
 
     command_to_execute = {}
