@@ -5,22 +5,30 @@ Created on Jan 25 17:53 2019
 """
 
 import os
-import logging, os
+import logging, os, sys
 import ntpath
 import re
 import json
 import pandas
 from src.models import Models
+from src.data_source import Data_source
 from src.utils import Utils
+import pandas as pd
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 
 class Instance:
 
+    id_path="id.config"
+    folder_path="config"
+
     def path_leaf(self, path):
         head, tail = ntpath.split(path)
         return tail or ntpath.basename(head)
+
+    def __init__(self):
+        self.util = Utils()
 
     def execute(self, connection, command_to_execute):
         self.connection=connection
@@ -30,67 +38,140 @@ class Instance:
         #logger.debug(df)
 
 
+
         for key, value in command_to_execute["instance"].items():
             if value is not None:
                 if key is "list":
-                    self.list()
+                    self.list(value)
                 elif key is "delete":
-                    self.delete(value)
+                    if len(value) == 2:
+                        self.delete(str(value[0]),str(value[1]))
+                    elif len(value) == 1:
+                        self.delete(str(value[0]), None)
+                    elif len(value) == 0:
+                        self.delete(None, None)
+                    else:
+                        logger.debug("Entered more values than supported")
+                        sys.exit(0)
+
                 elif key is "add":
                     if len(value) == 2:
                         self.add(str(value[0]),str(value[1]))
 
-    def list(self):
-        #need to use host
-        # curl may not work on windows terminal
-        logger.debug("list")
-        payload = ""
-        headers = {
-            'cache-control': "no-cache"
-        }
-        response=self.connection.send_request("GET","v1/models",payload, headers)
-        logger.debug(json.dumps(response, indent=4, sort_keys=True))
-        return response
-
-
-    def delete(self, model_name):
-        logger.debug("Delete")
-        #model_name=self.command_to_execute["model_name"]
-        if "all" in model_name:
-            payload = ""
-            headers = {
-                'cache-control': "no-cache"
-            }
-            models = self.list()
-            logger.debug("model name: " + str(models["models"]))
-            for name in models["models"]:
-                #logger.debug("model name: "+str(name))
-                for key, value in name.items():
-                    #logger.debug("value: " + str(value))
-                    endpoint = "v1/models/" + value
-                    response=self.connection.send_request("DELETE", endpoint, payload, headers)
-                    logger.debug(json.dumps(response, indent=4, sort_keys=True))
+    def list(self, model_name_input=None):
+        if model_name_input is not None:
+            if "all"in model_name_input:
+                #get all model_names and instances
+                folder = "instances"
+                folder_path = os.path.join(folder)
+                model_names=self.util.get_all_folder_names(folder)
+                #logger.debug("model names "+str(model_names))
+                dict = {}
+                dict1={}
+                for model in model_names:
+                    folder = "instances"
+                    folder_path = os.path.join(folder, model)
+                    instance_names = self.util.get_all_files_from_folder(folder_path)
+                    #logger.debug("instance names " + str(instance_names))
+                    dict[model] = instance_names
+                dict1["instance_list"] = dict
+                #logger.debug("dict1 " + str(dict1))
+                df = pd.DataFrame(dict1)
+                logger.debug(df)
+            else:
+                #get instances for one model_name
+                folder = "instances"
+                folder_path = os.path.join(folder, model_name_input)
+                instance_names = self.util.get_all_files_from_folder(folder_path)
+                #logger.debug("instance names " + str(instance_names))
+                dict={}
+                dict1={}
+                dict[model_name_input]=instance_names
+                dict1["instance_list"]=dict
+                logger.debug("dict1 " + str(dict1))
+                df = pd.DataFrame(dict1)
+                logger.debug(df)
         else:
-            payload = ""
-            headers = {
-                'cache-control': "no-cache"
-            }
-            endpoint= "v1/models/" + model_name
-            response=self.connection.send_request("DELETE", endpoint, payload, headers)
-            logger.debug(json.dumps(response, indent=4, sort_keys=True))
-        #if self.command_to_execute[""]
+            logger.error("Enter a model name")
+            sys.exit(0)
 
 
-    def add(self, instance_name,model_name):
-        self.util=Utils()
+    def delete(self, model_name_input=None,instance_name_input=None):
+        logger.debug("Delete")
+        logger.debug("model name "+str(model_name_input))
+        logger.debug("instace_name "+str(instance_name_input))
+
+        path = self.command_to_execute["host"] + "-" + self.id_path
+        path = os.path.join(self.folder_path, path)
+
+        self.input_object=Data_source()
+
+        if model_name_input is not None:
+
+            #two possibilities: 1 existing model_name 2. "all"
+            if "all" in model_name_input:
+                logger.debug("Erase all model name instances")
+                id = self.util.get_id(path, None, model_name_input, instance_name_input)
+                logger.debug("id " + str(id))
+                self.input_object.delete(id, path, self.connection)
+                folder = "instances"
+                self.util.delete_all_files_from_folder(folder)
+                instance_folder_path = os.path.join(folder, model_name_input)
+                if self.util.is_dir_empty(instance_folder_path):
+                    self.util.delete_folder(instance_folder_path)
+
+            else:
+                if instance_name_input is not None:
+                    if "all" in instance_name_input:
+                        logger.debug("Erasing all instances")
+                        id = self.util.get_id(path, None, model_name_input, instance_name_input)
+                        logger.debug("id " + str(id))
+                        self.input_object.delete(id, path, self.connection)
+                        folder = "instances"
+                        instance_folder_path = os.path.join(folder, model_name_input)
+                        self.util.delete_all_files_from_folder(instance_folder_path)
+                        if self.util.is_dir_empty(instance_folder_path):
+                            self.util.delete_folder(instance_folder_path)
+                    else:
+                        logger.debug("Erasing instance "+str(instance_name_input))
+                        id=self.util.get_id(path,None,model_name_input,instance_name_input)
+                        logger.debug("id "+str(id))
+                        self.input_object.delete(id, path, self.connection)
+                        folder = "instances"
+                        instance_path = os.path.join(folder, model_name_input, instance_name_input) + ".xlsx"
+                        self.util.deleteFile(instance_path)
+                        folder_path= os.path.join(folder, model_name_input)
+                        if self.util.is_dir_empty(folder_path):
+                            self.util.delete_folder(folder_path)
+
+                else:
+                    logger.debug("Erasing last instance used")
+                    id = self.util.get_id(path, None, model_name_input, instance_name_input)
+                    logger.debug("id " + str(id))
+                    instance_name_input = self.util.get_instance_name(id)
+                    folder = "instances"
+                    instance_path = os.path.join(folder, model_name_input, instance_name_input) + ".xlsx"
+                    self.util.deleteFile(instance_path)
+                    folder_path = os.path.join(folder, model_name_input)
+                    if self.util.is_dir_empty(folder_path):
+                        self.util.delete_folder(folder_path)
+
+            logger.debug("Erase completed successfully")
+        else:
+            logger.error("Model_name is missing")
+            sys.exit(0)
+
+
+
+    def add(self,model_name,instance_name):
+
         logger.debug("Adding an instance")
-        logger.debug("Instance name "+str(instance_name))
-        logger.debug("Model name "+str(model_name))
-        folder="instances"
-        filename="instance_name.xlsx"
-        folder_path=os.path.join(folder,model_name)
-        path = os.path.join(folder,model_name,instance_name)+".xlsx"
-        logger.debug("path "+str(path))
+        #logger.debug("Instance name "+str(instance_name))
+        #logger.debug("Model name "+str(model_name))
+        folder = "instances"
+        folder_path = os.path.join(folder, model_name)
+        path = os.path.join(folder, model_name, instance_name) + ".xlsx"
+        # logger.debug("path "+str(path))
         try:
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)

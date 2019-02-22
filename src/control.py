@@ -123,26 +123,39 @@ class Data_output:
             logger.error("No ids to delete")
             sys.exit(0)
 
-    def add(self, filepath, id=None):
+    def add(self, filepath, id=None, connection=None):
         logger.debug("Add data_output")
 
-        #logger.debug("path: "+filepath)
-        payload=""
-        with open(filepath,"r") as myfile:
-            payload=myfile.read()
+        if connection is not None:
+            self.connection=connection
+            flag_instance=True
+
+        if not isinstance(filepath, dict):
+            try:
+                with open(filepath, "r") as myfile:
+                    payload = myfile.read()
+            except Exception as e:
+                logger.debug("File path not existing")
+                logger.error(e)
+                sys.exit(0)
+        else:
+            payload = json.dumps(filepath)
+
 
         headers = {
             'Content-Type': "application/json",
             'cache-control': "no-cache"
         }
-
+        logger.debug("id "+str(id))
         if isinstance(id, list):
             logger.debug("List of the following instances: " + str(id))
             for element in id:
-                # logger.debug("List of "+str(element))
-                for key in element.keys():
-                    self.id_to_add = element[key]
-
+                logger.debug("List of "+str(element))
+                for model_name in element.keys():
+                    for list_2 in element[model_name]:
+                        for instance_name in list_2.keys():
+                            self.id_to_add = list_2[instance_name]
+                logger.debug("id to add"+str(self.id_to_add))
                 endpoint = "v1/outputs/mqtt/"+self.id_to_add
                 response=self.connection.send_request("PUT", endpoint, payload, headers)
                 logger.debug(json.dumps(response, indent=4, sort_keys=True))
