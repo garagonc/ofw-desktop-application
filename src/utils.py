@@ -606,7 +606,7 @@ class Utils:
         """Reads data from excel config file, parses it, and returns it as dict
 
         Arguments:
-            filepath {str} -- Filepath to the excel instance file
+            filepath {str} -- Filepath to the excel config file
 
         Returns:
             dict -- Python dict of inputs, outputs, and start config
