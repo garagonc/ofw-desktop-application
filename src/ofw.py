@@ -178,7 +178,7 @@ def parser():
 
     models_group.add_option("--model_add", help="<filepath> <model_name>  registers an optimization model", dest="model_add",
                             metavar='<filepath> <model_name>', action="callback", callback=vararg_callback)
-    models_group.add_option("--model_list", help="gets the models name stored at ofw. Write a model name to get the whole optimization model displayed", dest="model_list", metavar='<model_name>', action="callback", callback=vararg_callback_1)
+    models_group.add_option("--model_list", help="gets the models name stored at ofw. Write a model name to get the whole optimization model displayed and stored in the folder models", dest="model_list", metavar='<model_name>', action="callback", callback=vararg_callback_1)
     models_group.add_option("--model_delete", help="deletes an optimization model with the respective name. Write all to delete all registered models",
                             dest="model_delete", metavar='<model_name>', action="store")
 
@@ -186,12 +186,12 @@ def parser():
     ###################     Instance              ############################################
     instance_group = optparse.OptionGroup(parser, "Creating an instance")
 
-    instance_group.add_option("--instance_add", help="<model_name> <instance_name>   registers an instance linked to an optimization model. It will create a folder with the name of your model and add a config file in there. Please configure that config file",
+    instance_group.add_option("--instance_add", help="<model_name> <instance_name>   registers an instance linked to an optimization model. It will create a folder with the name \"instances\" and the name of your model and add a config file in there. Please configure that config file",
                             dest="instance_add",metavar='<model_name> <instance_name>', nargs=2, action="store")
-    instance_group.add_option("--instance_list", help="gets the instance names of a given model_name", dest="instance_list",
+    instance_group.add_option("--instance_list", help="gets the instance names of a given model_name. Write all to have a list of all registered instances", dest="instance_list",
                               metavar='<model_name>', nargs=1, action="store")
     instance_group.add_option("--instance_delete",
-                            help="<model_name> <instance_name>   deletes a stored instance with the respective name. Write all to delete all registered instances",
+                            help="<model_name> <instance_name>   deletes a stored instance with the respective name. Write all to delete all registered instance files or model folders",
                             dest="instance_delete", metavar='<model_name> <instance_name>', action="callback", callback=vararg_callback)
 
     parser.add_option_group(models_group)

@@ -35,20 +35,24 @@ class Data_output:
                     if len(value) == 1:
                         if "all" in value:
                             id = self.util.get_id(self.path,"all")
+                            id_list = self.util.get_id_list(id)
                         else:
                             id = value
                     else:
                         id = self.util.get_id(self.path, None)
-                    self.list(id)
+                        id_list = self.util.get_id_list(id)
+                    self.list(id_list)
 
                 elif key is "delete":
                     if len(value) == 1:
                         if "all" in value:
-                            id = self.util.get_id(self.path,"all")
+                            id_dict = self.util.get_id(self.path,"all")
+                            id = self.util.get_id_list(id_dict)
                         else:
                             id = value
                     else:
-                        id = self.util.get_id(self.path, None)
+                        id_dict = self.util.get_id(self.path, None)
+                        id = self.util.get_id_list(id_dict)
 
                     self.delete(id)
 
@@ -73,10 +77,10 @@ class Data_output:
             }
 
             if isinstance(id,list):
-                logger.debug("List of the following instances: "+str(id))
-                id_list = self.util.get_id_list(id)
-                logger.debug("id list " + str(id_list))
-                for element_id in id_list:
+                #logger.debug("List of the following instances: "+str(id))
+                #id_list = self.util.get_id_list(id)
+                logger.debug("id list " + str(id))
+                for element_id in id:
                     endpoint = "v1/outputs/" + element_id
                     response = self.connection.send_request("GET", endpoint, payload, headers)
                     df = pd.DataFrame(response)
@@ -93,7 +97,7 @@ class Data_output:
 
 
     def delete(self, id):
-        logger.debug("Delete data_output "+str(id))
+        #logger.debug("Delete data_output "+str(id))
         if id is not None:
             payload = ""
 
@@ -104,10 +108,10 @@ class Data_output:
 
 
             if isinstance(id,list):
-                logger.debug("List of the following instances: "+str(id))
-                id_list = self.util.get_id_list(id)
-                logger.debug("id list " + str(id_list))
-                for self.element_to_erase in id_list:
+                #logger.debug("List of the following instances: "+str(id))
+
+                logger.debug("Id list to erase" + str(id))
+                for self.element_to_erase in id:
 
                     endpoint = "v1/outputs/mqtt/" + self.element_to_erase
                     response = self.connection.send_request("DELETE", endpoint, payload, headers)
@@ -148,14 +152,14 @@ class Data_output:
         }
         logger.debug("id "+str(id))
         if isinstance(id, list):
-            logger.debug("List of the following instances: " + str(id))
+            #logger.debug("List of the following instances: " + str(id))
             for element in id:
-                logger.debug("List of "+str(element))
+                #logger.debug("List of "+str(element))
                 for model_name in element.keys():
                     for list_2 in element[model_name]:
                         for instance_name in list_2.keys():
                             self.id_to_add = list_2[instance_name]
-                logger.debug("id to add"+str(self.id_to_add))
+                #logger.debug("id to add"+str(self.id_to_add))
                 endpoint = "v1/outputs/mqtt/"+self.id_to_add
                 response=self.connection.send_request("PUT", endpoint, payload, headers)
                 logger.debug(json.dumps(response, indent=4, sort_keys=True))

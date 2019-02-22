@@ -27,8 +27,8 @@ class Models:
         for key, value in command_to_execute["model"].items():
             if value is not None:
                 if key is "list":
-                    logger.debug("value " + str(value))
-                    logger.debug("Len value "+str(len(value)))
+                    #logger.debug("value " + str(value))
+                    #logger.debug("Len value "+str(len(value)))
                     if len(value) == 1:
                         model_name = value[0]
                     else:

@@ -157,13 +157,15 @@ class Command:
                     if len(value) == 1:
                         if "all" in value:
                             id = self.util.get_id(self.id_path,"all")
+                            id_list = self.util.get_id_list(id)
                         else:
                             logger.debug("Value " + str(value))
-                            id = value
+                            id_list = value
                     else:
                         id = self.util.get_id(self.id_path, None)
-                    if id is not None:
-                        self.stop(id)
+                        id_list = self.util.get_id_list(id)
+                    if id_list is not None:
+                        self.stop(id_list)
                     else:
                         self.stop(None)
                 elif key is "status":
@@ -268,15 +270,18 @@ class Command:
 
     def start_instance(self, model_name, instance_name):
         logger.debug("start instance")
-        all_ids=self.util.get_id(self.id_path, "all")
+
         if self.util.instance_exist(model_name,instance_name):
         #if self.util.is_model_name(all_ids,model_name):
             #if self.util.instance_exist(model_name,instance_name):
             #call get instance values with model_name and instance_name and stores it in data
             folder = "instances"
             instance_path = os.path.join(folder, model_name, instance_name) + ".xlsx"
-            data=self.util.read_data_from_xlsx_instance_config(instance_path)
-            logger.debug("data "+str(data))
+            try:
+                data=self.util.read_data_from_xlsx_instance_config(instance_path)
+                logger.debug("data "+str(data))
+            except Exception as e:
+                logger.debug(e)
             self.input_data = self.data["input"]
             self.output_data =  self.data["output"]
             self.start_data = self.data["start"]
@@ -285,7 +290,7 @@ class Command:
             id_list=self.util.get_id(self.id_path, None, model_name, instance_name)
             if instance_name is None:
                 instance_name=self.util.get_instance_name(id_list)
-            logger.debug("instance name "+str(instance_name))
+            #logger.debug("instance name "+str(instance_name))
             logger.debug("id_list " + str(id_list))
             #logger.debug(" len " + str(len(id_list)))
 
@@ -296,8 +301,21 @@ class Command:
                 self.util.store(self.id_path,data_relocated)
                 logger.debug("Ids relocated in memory")
 
+                logger.debug("Registering inputs")
+                if isinstance(self.input_data,dict):
+                    if len(self.input_data) > 0:
+                        logger.debug("Adding inputs with id")
+                        self.input_object.add(self.input_data,id_list,model_name,instance_name, self.id_path, self.connection)
+                    else:
+                        logger.error("No input configuration present")
+                        sys.exit(0)
+                else:
+                    logger.error("Input configuration is not a dictionary")
+                    sys.exit(0)
+
             else:
                 #if the id is not present, we make a POST of the input
+                logger.debug("Registering inputs")
                 if isinstance(self.input_data,dict):
                     if len(self.input_data) > 0:
                         logger.debug("Adding inputs")
@@ -309,6 +327,7 @@ class Command:
                     logger.error("Input configuration is not a dictionary")
                     sys.exit(0)
 
+            logger.debug("Registering outputs")
             #after adding the input the otuput is always added
             if isinstance(self.output_data,dict):
                 if len(self.output_data) > 0:
@@ -318,6 +337,7 @@ class Command:
                 logger.error("Output configuration is not a dictionary")
                 sys.exit(0)
 
+            logger.debug("Starting the system")
             #After input and output we start ofw
             if isinstance(self.start_data,dict):
                 if len(self.start_data) > 0:
@@ -367,7 +387,7 @@ class Command:
             if isinstance(id,list):
                 logger.debug("Starting the following instances: "+str(id))
                 #id_list = self.util.get_id_list(id)
-                logger.debug("id list " + str(id_list))
+                #logger.debug("id list " + str(id_list))
                 for element_id in id_list:
                     #logger.debug("id "+str(element))
                     endpoint = "v1/optimization/start/" + str(element_id)
@@ -393,10 +413,10 @@ class Command:
             }
 
             if isinstance(id,list):
-                logger.debug("Stoping the following instances: "+str(id))
-                id_list = self.util.get_id_list(id)
-                logger.debug("id list " + str(id_list))
-                for element_id in id_list:
+                #logger.debug("Stoping the following instances: "+str(id))
+
+                logger.debug("Id list to stop " + str(id))
+                for element_id in id:
                     endpoint = "v1/optimization/stop/" + element_id
                     response = self.connection.send_request("PUT", endpoint, payload, headers)
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))

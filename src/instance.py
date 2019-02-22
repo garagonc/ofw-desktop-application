@@ -88,7 +88,7 @@ class Instance:
                 dict1={}
                 dict[model_name_input]=instance_names
                 dict1["instance_list"]=dict
-                logger.debug("dict1 " + str(dict1))
+                #logger.debug("dict1 " + str(dict1))
                 df = pd.DataFrame(dict1)
                 logger.debug(df)
         else:
@@ -98,8 +98,8 @@ class Instance:
 
     def delete(self, model_name_input=None,instance_name_input=None):
         logger.debug("Delete")
-        logger.debug("model name "+str(model_name_input))
-        logger.debug("instace_name "+str(instance_name_input))
+        #logger.debug("model name "+str(model_name_input))
+        #logger.debug("instace_name "+str(instance_name_input))
 
         path = self.command_to_execute["host"] + "-" + self.id_path
         path = os.path.join(self.folder_path, path)
@@ -185,7 +185,7 @@ class Instance:
             logger.error(e)
 
     def readInputsOutputs(self, model_name):
-        logger.debug("Reading inputs and outputs")
+        logger.debug("Reading inputs and outputs from optimization model "+str(model_name))
         models = Models()
         data = models.list(model_name,self.connection)
         data=data.decode("utf-8")
