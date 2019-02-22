@@ -130,8 +130,12 @@ def parser():
     ###################     command             ############################################
     command_group = optparse.OptionGroup(parser, "Endpoint command")
 
-    command_group.add_option("--start", help="<filepath or instance_name> <id>   starts the optimnization. If id is not present takes the last id used. Write all to start all instances", dest="start", metavar='<filepath> <id>',
+    command_group.add_option("--start", help="<filepath> <id>   starts the optimnization. If id is not present takes the last id used. Write all to start all instances", dest="start", metavar='<filepath> <id>',
                              action="callback",callback=vararg_callback)
+    command_group.add_option("--start_instance",
+                             help="<model_name><instance_name>    starts the optimnization. If id is not present takes the last id used. Write all to start all instances",
+                             dest="start_instance", metavar='<filepath> <id>',
+                             action="callback", callback=vararg_callback)
     # command_group.add_option("--start",help="starts the optimnization",dest="start",metavar='<filepath> <id>', nargs=2, action="store")
     command_group.add_option("--stop", help="<id or instance_name>  stops the optimnization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
                              metavar='<id>', action="callback", callback=vararg_callback_1)
@@ -182,13 +186,13 @@ def parser():
     ###################     Instance              ############################################
     instance_group = optparse.OptionGroup(parser, "Creating an instance")
 
-    instance_group.add_option("--instance_add", help="registers an instance linked to an optimization model. It will create a folder with the name of your model and add a config file in there. Please configure that config file",
-                            dest="instance_add",metavar='<instance_name> <model_name>', nargs=2, action="store")
-    instance_group.add_option("--instance_list", help="gets the instance names stored at ofw", dest="instance_list",
-                            action="store_true")
+    instance_group.add_option("--instance_add", help="<model_name> <instance_name>   registers an instance linked to an optimization model. It will create a folder with the name of your model and add a config file in there. Please configure that config file",
+                            dest="instance_add",metavar='<model_name> <instance_name>', nargs=2, action="store")
+    instance_group.add_option("--instance_list", help="gets the instance names of a given model_name", dest="instance_list",
+                              metavar='<model_name>', nargs=1, action="store")
     instance_group.add_option("--instance_delete",
-                            help="deletes a stored instance with the respective name. Write all to delete all registered instances",
-                            dest="instance_delete", metavar='<instance_name>', action="store")
+                            help="<model_name> <instance_name>   deletes a stored instance with the respective name. Write all to delete all registered instances",
+                            dest="instance_delete", metavar='<model_name> <instance_name>', action="callback", callback=vararg_callback)
 
     parser.add_option_group(models_group)
     parser.add_option_group(data_source_group)
@@ -206,7 +210,7 @@ def parser():
     model = {"add":opts.model_add, "list": opts.model_list, "delete": opts.model_delete}
     data_source = {"add":opts.ds_add, "list": opts.ds_list, "delete": opts.ds_delete}
     data_output = {"add": opts.do_add, "list": opts.do_list, "delete": opts.do_delete}
-    command={"start":opts.start, "stop":opts.stop, "status":opts.status, "restart":opts.restart}
+    command={"start":opts.start, "start_instance":opts.start_instance,"stop":opts.stop, "status":opts.status, "restart":opts.restart}
     instance = {"add": opts.instance_add, "list": opts.instance_list, "delete": opts.instance_delete}
 
     utils=Utils()
@@ -243,8 +247,8 @@ if __name__ == '__main__':
         format:
         api_category command_name required args 
         eg:
-        data_source -add file_path      - for post
-        data_source -add file_path id   - for put
+        --input_add file_path      - for post
+        --input_add file_path id   - for put
     """
 
     command_to_execute = {}

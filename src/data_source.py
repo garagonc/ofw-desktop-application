@@ -72,13 +72,14 @@ class Data_source:
         # curl may not work on windows terminal
         logger.debug("list inputs")
         #logger.debug("id list "+str(id))
-        if id is not None:
-            payload = ""
+        payload = ""
 
-            headers = {
-                'Content-Type': "application/json",
-                'cache-control': "no-cache"
-            }
+        headers = {
+            'Content-Type': "application/json",
+            'cache-control': "no-cache"
+        }
+
+        if id is not None:
 
             if isinstance(id,list):
                 logger.debug("List of the following instances: "+str(id))
@@ -95,12 +96,6 @@ class Data_source:
 
 
         elif "all" in all:
-            payload = ""
-
-            headers = {
-                'Content-Type': "application/json",
-                'cache-control': "no-cache"
-            }
 
             endpoint = "v1/inputs/dataset"
             response = self.connection.send_request("GET", endpoint, payload, headers)
@@ -111,21 +106,23 @@ class Data_source:
             logger.debug(json.dumps(response, indent=4, sort_keys=True))
 
         elif "ids" in all:
-            payload = ""
 
-            headers = {
-                'Content-Type': "application/json",
-                'cache-control': "no-cache"
-            }
             endpoint = "v1/inputs/dataset/ids"
             response = self.connection.send_request("GET", endpoint, payload, headers)
+            list_to_send=[]
+            list_to_send=response
+            endpoint = "v1/inputs/mqtt/ids"
+            response = self.connection.send_request("GET", endpoint, payload, headers)
+            for element in response:
+                list_to_send.append(element)
             #logger.debug(json.dumps(response, indent=4, sort_keys=True))
-            return response
+            return list_to_send
+
         else:
             logger.error("No ids to list")
             sys.exit(0)
 
-    def delete(self, id):
+    def delete(self, id, id_path=None, connection=None):
         #logger.debug("Delete input "+str(id))
         if id is not None:
             payload = ""
@@ -135,59 +132,78 @@ class Data_source:
                 'cache-control': "no-cache"
             }
 
+            if connection is not None:
+                self.connection = connection
+
             if isinstance(id,list):
                 try:
                     logger.debug("List of the following instances: "+str(id))
                     id_list = self.util.get_id_list(id)
                     logger.debug("id list to erase " + str(id_list))
-                    for self.element_to_erase in id_list:
-
-                        logger.debug("element to erase "+str(self.element_to_erase) + " type "+str(type(self.element_to_erase)))
-                        #self.element_to_erase =element
+                    if id_path is None:
                         path = self.command_to_execute["host"] + "-" + self.id_path
                         path = os.path.join(self.folder_path, path)
+                    else:
+                        path = id_path
+
+                    for self.element_to_erase in id_list:
+
+                        logger.debug("element to erase "+str(self.element_to_erase))
+                        #self.element_to_erase =element
 
                         endpoint = "v1/inputs/dataset/" + self.element_to_erase
                         response = self.connection.send_request("DELETE", endpoint, payload, headers)
                         logger.debug(json.dumps(response, indent=4, sort_keys=True))
-                        self.util.erase_id(path,self.element_to_erase)
+                        #self.util.erase_id(path,self.element_to_erase)
 
-                        if not "success" in response:
-                            endpoint = "v1/inputs/mqtt/" + self.element_to_erase
-                            response = self.connection.send_request("DELETE", endpoint, payload, headers)
-                            logger.debug(json.dumps(response, indent=4, sort_keys=True))
-                            self.util.erase_id(path, self.element_to_erase)
+                        #if not "success" in response:
+                        endpoint = "v1/inputs/mqtt/" + self.element_to_erase
+                        response = self.connection.send_request("DELETE", endpoint, payload, headers)
+                        logger.debug(json.dumps(response, indent=4, sort_keys=True))
+                        self.util.erase_id(path, self.element_to_erase)
 
 
                 except Exception as e:
-                    path = self.command_to_execute["host"] + "-" + self.id_path
-                    path = os.path.join(self.folder_path, path)
+                    if id_path is None:
+                        path = self.command_to_execute["host"] + "-" + self.id_path
+                        path = os.path.join(self.folder_path, path)
+                    else:
+                        path = id_path
                     self.util.erase_id(path,self.element_to_erase)
                     logger.error(e)
 
         else:
             logger.error("No ids to delete")
-            sys.exit(0)
 
 
-    def add(self, filepath, id=None, instance_name=None, model_name=None):
+
+    def add(self, filepath, id=None, model_name=None, instance_name=None, id_path=None, connection=None):
         logger.debug("Add inputs")
 
-        # collects all ids from ofw if the file is not present
-        path = self.command_to_execute["host"] + "-" + self.id_path
-        path = os.path.join(self.folder_path, path)
-        self.util.collect_store_ids_from_ofw(path)
 
+        if not id_path:
+            path = self.command_to_execute["host"] + "-" + self.id_path
+            path = os.path.join(self.folder_path, path)
+        else:
+            path=id_path
+
+        if connection is not None:
+            self.connection=connection
+
+        # collects all ids from ofw if the file is not present
+        self.collect_store_ids_from_ofw(path)
 
         #normal working
-        payload=""
-        try:
-            with open(filepath,"r") as myfile:
-                payload=myfile.read()
-        except Exception as e:
-            logger.debug("File path not existing")
-            logger.error(e)
-            sys.exit(0)
+        if not isinstance(filepath,dict):
+            try:
+                with open(filepath,"r") as myfile:
+                    payload=myfile.read()
+            except Exception as e:
+                logger.debug("File path not existing")
+                logger.error(e)
+                sys.exit(0)
+        else:
+            payload=json.dumps(filepath)
 
         headers = {
             'Content-Type': "application/json",
@@ -215,23 +231,36 @@ class Data_source:
                 endpoint = "v1/inputs/mqtt"
 
             else:
-                #logger.debug("file")
+                logger.debug("file")
                 endpoint = "v1/inputs/dataset"
 
             try:
                 response = self.connection.send_request_add("POST", endpoint, payload, headers)
                 if response is not None:
                     logger.debug("Id: " + json.dumps(response, indent=4, sort_keys=True))
-                    folder="config"
-                    path = self.command_to_execute["host"] + "-" + self.id_path
-                    path=os.path.join(folder,path)
-                    data = {}
-                    data[str(model_name)]= [{str(instance_name) : response}]
-                    #logger.debug("data "+str(data))
-                    #df=pd.DataFrame(data)
-                    self.util.store(path,[data])
+                    logger.debug("instance name "+str(instance_name))
+                    logger.debug("model name " + str(model_name))
+                    logger.debug("pyth " + str(path))
 
-                    #self.util.store(path)
+                    data=self.util.integrate_id_in_model_name(path,response,model_name,instance_name)
+                    logger.debug("data "+str(data))
+                    data_relocated=self.util.relocate_id([response],data,model_name,instance_name)
+                    logger.debug("data relocated "+str(data_relocated))
+                    self.util.store(path,data_relocated)
+
             except Exception as e:
                 logger.error(e)
                 sys.exit(0)
+
+    def collect_store_ids_from_ofw(self,path):
+        if not self.util.isFile(path):
+            ids=self.list(None,"ids")
+            #logger.debug("ids list "+str(ids))
+            ids_to_store = []
+            for element in ids:
+                ids_dict = {}
+                ids_dict["None"]=  [{"None": element}]
+                ids_to_store.append(ids_dict)
+            #logger.debug("ids_to_store "+str(ids_to_store))
+            if len(ids_to_store) > 0:
+                self.util.store(path,ids_to_store)
