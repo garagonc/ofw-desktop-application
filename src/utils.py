@@ -668,7 +668,7 @@ class Utils:
 
                 if "filename" in key:
                     if os.path.isfile(value):
-                        data_from_file = pd.read_excel(f"./{value}", header=None)
+                        data_from_file = pd.read_excel(value, header=None)
 
                         if input_value_name in generic_input_dataset:
                             logger.error(f"ERROR: Duplicate values: \
