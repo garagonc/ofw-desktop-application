@@ -112,8 +112,9 @@ class Instance:
             if "all" in model_name_input:
                 logger.debug("Erase all model name instances")
                 id = self.util.get_id(path, None, model_name_input, instance_name_input)
-                logger.debug("id " + str(id))
-                self.input_object.delete(id, path, self.connection)
+                id_list = self.util.get_id_list(id)
+                logger.debug("id " + str(id_list))
+                self.input_object.delete(id_list, path, self.connection)
                 folder = "instances"
                 self.util.delete_all_files_from_folder(folder)
                 instance_folder_path = os.path.join(folder, model_name_input)
@@ -125,8 +126,9 @@ class Instance:
                     if "all" in instance_name_input:
                         logger.debug("Erasing all instances")
                         id = self.util.get_id(path, None, model_name_input, instance_name_input)
-                        logger.debug("id " + str(id))
-                        self.input_object.delete(id, path, self.connection)
+                        id_list = self.util.get_id_list(id)
+                        logger.debug("id " + str(id_list))
+                        self.input_object.delete(id_list, path, self.connection)
                         folder = "instances"
                         instance_folder_path = os.path.join(folder, model_name_input)
                         self.util.delete_all_files_from_folder(instance_folder_path)
@@ -135,8 +137,9 @@ class Instance:
                     else:
                         logger.debug("Erasing instance "+str(instance_name_input))
                         id=self.util.get_id(path,None,model_name_input,instance_name_input)
-                        logger.debug("id "+str(id))
-                        self.input_object.delete(id, path, self.connection)
+                        id_list = self.util.get_id_list(id)
+                        logger.debug("id "+str(id_list))
+                        self.input_object.delete(id_list, path, self.connection)
                         folder = "instances"
                         instance_path = os.path.join(folder, model_name_input, instance_name_input) + ".xlsx"
                         self.util.deleteFile(instance_path)
@@ -147,7 +150,9 @@ class Instance:
                 else:
                     logger.debug("Erasing last instance used")
                     id = self.util.get_id(path, None, model_name_input, instance_name_input)
-                    logger.debug("id " + str(id))
+                    id_list = self.util.get_id_list(id)
+                    logger.debug("id " + str(id_list))
+                    self.input_object.delete(id_list, path, self.connection)
                     instance_name_input = self.util.get_instance_name(id)
                     folder = "instances"
                     instance_path = os.path.join(folder, model_name_input, instance_name_input) + ".xlsx"

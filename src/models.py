@@ -66,14 +66,18 @@ class Models:
         else:
             endpoint="v1/models/"+model_name
             response = self.connection.send_request_model_read("GET", endpoint, payload, headers)
+            #logger.debug("response " + str(response))
             if not flag_instance:
                 folder="models"
                 if not os.path.exists(folder):
                     os.makedirs(folder)
-                path=os.path.join(folder,model_name+".txt")
-                with open(path, 'wb') as outfile:
-                    outfile.write(response)
-                logger.debug("File saved as "+ path)
+                if response:
+                    path=os.path.join(folder,model_name+".txt")
+                    with open(path, 'wb') as outfile:
+                        outfile.write(response)
+                    logger.debug("File saved as "+ path)
+                else:
+                    logger.error("Optimization model not existing")
             else:
                 logger.debug("Optimization model received")
 

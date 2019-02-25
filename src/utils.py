@@ -192,6 +192,14 @@ class Utils:
         else:
             return False
 
+    def model_folder_exist(self,model_name):
+        folder = "instances"
+        path = os.path.join(folder, model_name)
+        if os.path.isdir(path):
+            return True
+        else:
+            return False
+
     def get_id(self, path, number=None, model_name_input=None, instance_name_input=None):
         """Erase one id from the id.config file
 
