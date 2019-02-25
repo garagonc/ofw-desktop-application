@@ -5,7 +5,10 @@ Created on Jan 25 17:53 2019
 """
 
 import os
-import logging, os, sys, shutil
+import logging
+import os
+import sys
+import shutil
 import ntpath
 import re
 import json
@@ -14,9 +17,9 @@ import copy
 import xlsxwriter as xl
 
 
-
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
+
 
 class Utils:
 
@@ -54,7 +57,7 @@ class Utils:
         else:
             return False
 
-    def deleteFile(self,path):
+    def deleteFile(self, path):
         if self.isFile(path):
             try:
                 os.remove(path)
@@ -70,7 +73,7 @@ class Utils:
         for element in id_list:
             for model_name in element.keys():
                 #logger.debug("element "+str(element))
-                instance_name=self.get_instance_name([element])
+                instance_name = self.get_instance_name([element])
                 model_name = model_name
                 folder = "instances"
                 instance_path = os.path.join(folder, model_name, instance_name) + ".xlsx"
@@ -82,7 +85,7 @@ class Utils:
                 else:
                     logger.error("Path not existing")
 
-    def get_all_files_from_folder(self,folder_path):
+    def get_all_files_from_folder(self, folder_path):
 
         if os.path.isdir(folder_path):
             if not self.is_dir_empty(folder_path):
@@ -91,7 +94,7 @@ class Utils:
                     file_path = os.path.join(folder_path, the_file)
                     try:
                         if os.path.isfile(file_path):
-                            file=re.sub("\.(.*)", "", the_file)
+                            file = re.sub("\.(.*)", "", the_file)
                             values.append(file)
                     except Exception as e:
                         logger.error(e)
@@ -101,8 +104,7 @@ class Utils:
         else:
             return None
 
-
-    def get_all_folder_names(self,folder_path):
+    def get_all_folder_names(self, folder_path):
         if os.path.isdir(folder_path):
             if not self.is_dir_empty(folder_path):
                 values = []
@@ -138,14 +140,11 @@ class Utils:
             if not files or dirnames:
                 return True
 
-    def getFolderPath(self,path):
+    def getFolderPath(self, path):
         return os.path.dirname(os.path.abspath(path))
 
-
-
-
     def store(self, path, data_list_of_dicts):
-        folder_path=self.getFolderPath(path)
+        folder_path = self.getFolderPath(path)
         self.createFolderPath(folder_path)
 
         if isinstance(data_list_of_dicts, list):
@@ -154,12 +153,9 @@ class Utils:
                 outfile.write(json.dumps(ids, indent=4, sort_keys=True))
         logger.debug("input data saved in " + str(path))
 
-
-
-
     def store_as_excel(self, path, data, id):
         try:
-            folder_path=self.getFolderPath(path)
+            folder_path = self.getFolderPath(path)
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
             # Create a Pandas dataframe from the data.
@@ -170,7 +166,7 @@ class Utils:
             df.to_excel(writer, sheet_name='Sheet1')
             # Close the Pandas Excel writer and output the Excel file.
             writer.save()
-            msg= "stored in "+str(path)
+            msg = "stored in "+str(path)
             return msg
         except Exception as e:
             logger.error(e)
@@ -184,7 +180,7 @@ class Utils:
             host = None
         return host
 
-    def instance_exist(self,model_name, instance_name):
+    def instance_exist(self, model_name, instance_name):
         folder = "instances"
         path = os.path.join(folder, model_name, instance_name) + ".xlsx"
         if os.path.isfile(path):
@@ -192,7 +188,7 @@ class Utils:
         else:
             return False
 
-    def model_folder_exist(self,model_name):
+    def model_folder_exist(self, model_name):
         folder = "instances"
         path = os.path.join(folder, model_name)
         if os.path.isdir(path):
@@ -220,8 +216,6 @@ class Utils:
         else:
             return None
 
-
-
         if number is not None:
             if "all" in number:
                 return id
@@ -245,10 +239,10 @@ class Utils:
                 else:
                     return None
             else:
-                #returns last id used with the given model_name
+                # returns last id used with the given model_name
                 if instance_name_input is None:
                     #logger.debug("Instance name not present")
-                    dict_1={}
+                    dict_1 = {}
                     for element in id:
                         #logger.debug("element "+str(element))
                         if model_name_input in element.keys():
@@ -272,7 +266,7 @@ class Utils:
                     #logger.debug("Instance name and model_name present")
                     #logger.debug("id "+str(id))
 
-                    #return all the ids for the given model name
+                    # return all the ids for the given model name
                     if "all" in instance_name_input:
                         logger.debug("All instance names are being collected")
 
@@ -290,10 +284,9 @@ class Utils:
                         else:
                             return None
 
-
                     # returns the id(s) with the given model and instance names
                     else:
-                        dict_1={}
+                        dict_1 = {}
                         for list_1 in id:
                             #logger.debug("List of " + str(list_1))
                             for model_name in list_1.keys():
@@ -307,7 +300,7 @@ class Utils:
                                             if instance_name_input == instance_name:
                                                 list_id.append(element)
                                                 #logger.debug("list_id " + str(list_id))
-                                    if len(list_id)>0:
+                                    if len(list_id) > 0:
                                         dict_1[model_name] = list_id
                                     else:
                                         return None
@@ -319,21 +312,18 @@ class Utils:
                         else:
                             return None
 
-
-
         else:
-            dict_1=id[-1]
-            list_1=[]
+            dict_1 = id[-1]
+            list_1 = []
             for key in dict_1.keys():
-                if len(dict_1[key])>1:
+                if len(dict_1[key]) > 1:
                     list_1.append(dict_1[key][-1])
-                    dict_1[key]=list_1
+                    dict_1[key] = list_1
             #logger.debug("dict_1 " + str(id[-1]))
             return [dict_1]
 
-
     def get_id_list(self, data):
-        data_to_return=[]
+        data_to_return = []
         if data is not None:
             for list_1 in data:
                 #logger.debug("List of " + str(list_1))
@@ -371,8 +361,7 @@ class Utils:
                     else:
                         return None
 
-
-    def integrate_id_in_model_name(self, path, id, model_name_input,instance_name_input ):
+    def integrate_id_in_model_name(self, path, id, model_name_input, instance_name_input):
         if os.path.isfile(path):
             try:
                 id_from_file = self.get_id(path, "all")
@@ -382,7 +371,7 @@ class Utils:
 
                     if model_name_input is not None:
 
-                        if self.is_model_name(id_from_file,model_name_input):
+                        if self.is_model_name(id_from_file, model_name_input):
 
                             for list_1 in id_from_file:
                                 for model_name in list_1.keys():
@@ -393,10 +382,10 @@ class Utils:
 
                                             for instance_name in list_2.keys():
                                                 values_list_2.append(list_2)
-                                        dict_add={str(instance_name_input):id}
+                                        dict_add = {str(instance_name_input): id}
                                         values_list_2.append(dict_add)
                                         #logger.debug("values_list_2 "+str(values_list_2))
-                                        list_1[model_name] =values_list_2
+                                        list_1[model_name] = values_list_2
                                         #logger.debug("list_1 " + str(list_1))
                             #logger.debug("id_from_file " + str(id_from_file))
 
@@ -404,7 +393,7 @@ class Utils:
                         else:
 
                             for list_1 in id_from_file:
-                                list_1[model_name_input]=[{str(instance_name_input):id}]
+                                list_1[model_name_input] = [{str(instance_name_input): id}]
                             return id_from_file
                     else:
 
@@ -416,55 +405,55 @@ class Utils:
                 logger.error(e)
                 sys.exit(0)
         else:
-            dict_1={}
+            dict_1 = {}
             dict_1[str(model_name_input)] = [{str(instance_name_input): id}]
             return [dict_1]
 
-    def convert_string_to_id(self,data_string, model_name=None, instance_name=None):
-        value={}
-        value[model_name]=[{str(instance_name):data_string}]
+    def convert_string_to_id(self, data_string, model_name=None, instance_name=None):
+        value = {}
+        value[model_name] = [{str(instance_name): data_string}]
         return [value]
-    #enters one id as a list
-    def relocate_id(self, id_list,id_from_file, model_name_input=None, instance_name_input=None):
-            try:
-                if id_list is not None:
+    # enters one id as a list
+
+    def relocate_id(self, id_list, id_from_file, model_name_input=None, instance_name_input=None):
+        try:
+            if id_list is not None:
                     #logger.debug("Entered to id list"+str(id_list))
 
-                    values = []
-                    instance_dict_temp = {}
-                    for list_1 in id_from_file:
-                        for model_name in list_1.keys():
-                            instance_dict = {}
+                values = []
+                instance_dict_temp = {}
+                for list_1 in id_from_file:
+                    for model_name in list_1.keys():
+                        instance_dict = {}
 
-                            values_list_2 = []
-                            temp_value=None
-                            for list_2 in list_1[model_name]:
-                                for instance_name in list_2.keys():
-                                    element_to_compare = list_2[instance_name]
-                                    for ids in id_list:
-                                        if not ids in element_to_compare:
-                                            values_list_2.append(list_2)
-                                        else:
-                                            temp_value = list_2
-                                        #logger.debug("values_list_2 " + str(values_list_2))
-                            if temp_value is not None:
-                                values_list_2.append(temp_value)
-                                instance_dict_temp[model_name]=values_list_2
-                            else:
-                                instance_dict[model_name] = values_list_2
-                            #logger.debug("values_list_2_2 " + str(values_list_2))
-                            #logger.debug("instance dict "+str(instance_dict))
-                            if len(instance_dict) > 0:
-                                values.append(instance_dict)
-                    values.append(instance_dict_temp)
-                    return values
-                    #logger.debug("values " + str(values))
-            except Exception as e:
-                logger.error(e)
+                        values_list_2 = []
+                        temp_value = None
+                        for list_2 in list_1[model_name]:
+                            for instance_name in list_2.keys():
+                                element_to_compare = list_2[instance_name]
+                                for ids in id_list:
+                                    if not ids in element_to_compare:
+                                        values_list_2.append(list_2)
+                                    else:
+                                        temp_value = list_2
+                                    #logger.debug("values_list_2 " + str(values_list_2))
+                        if temp_value is not None:
+                            values_list_2.append(temp_value)
+                            instance_dict_temp[model_name] = values_list_2
+                        else:
+                            instance_dict[model_name] = values_list_2
+                        #logger.debug("values_list_2_2 " + str(values_list_2))
+                        #logger.debug("instance dict "+str(instance_dict))
+                        if len(instance_dict) > 0:
+                            values.append(instance_dict)
+                values.append(instance_dict_temp)
+                return values
+                #logger.debug("values " + str(values))
+        except Exception as e:
+            logger.error(e)
 
+    # enters one id
 
-
-    #enters one id
     def erase_id(self, path, id, model_name_input=None):
         """Erase one id from the id.config file
 
@@ -473,7 +462,7 @@ class Utils:
                     id {str} -- Id to be erased from the config
                     model_name_input {str} -- model_name to erase
                 """
-        path_new =  path
+        path_new = path
         #logger.debug("id to erase "+str(id))
         if os.path.isfile(path_new):
             try:
@@ -481,7 +470,7 @@ class Utils:
                 #logger.debug("id from file "+str(id_from_file))
                 if id is not None:
                     #logger.debug("Entered to id")
-                    values=[]
+                    values = []
                     for list_1 in id_from_file:
                         for model_name in list_1.keys():
                             instance_dict = {}
@@ -493,10 +482,10 @@ class Utils:
                                     if not id in element_to_compare:
                                         values_list_2.append(list_2)
                                         #logger.debug("values_list_2 " + str(values_list_2))
-                            if len(values_list_2)>0:
-                                instance_dict[model_name]=values_list_2
+                            if len(values_list_2) > 0:
+                                instance_dict[model_name] = values_list_2
                             #logger.debug("instance dict "+str(instance_dict))
-                            if len(instance_dict)>0:
+                            if len(instance_dict) > 0:
                                 values.append(instance_dict)
                             #logger.debug("values " + str(values))
 
@@ -510,7 +499,7 @@ class Utils:
                             if not model_name_input in model_name:
                                 instance_dict[model_name] = list_1[model_name]
                             #logger.debug("instance dict "+str(instance_dict)+" len "+str(len(instance_dict)))
-                            if len(instance_dict)>0:
+                            if len(instance_dict) > 0:
                                 values.append(instance_dict)
                             #logger.debug("values " + str(values))
 
@@ -623,7 +612,7 @@ class Utils:
             dict -- Python dict of inputs, outputs, and start config
         """
         if not os.path.isfile(filepath):
-            print(f"Error: Excel file at {filepath} is missing")
+            logger.error(f"Error: Excel file at {filepath} is missing")
             return
 
         # Read file
@@ -632,7 +621,7 @@ class Utils:
         # Extract inputs sheet
         inputs = excel_data["inputs"]
         inputs.drop(labels=["Description", inputs.columns[3]], axis=1, inplace=True)
-        inputs[inputs.isna()] = "empty_input_values"
+        inputs.fillna("empty_input_values", inplace=True)
 
         generic_input_mqtt = {}
         generic_input_dataset = {}
@@ -655,7 +644,7 @@ class Utils:
                     qos = inputs.loc[row_num + 2]["or MQTT params"]
 
                     if input_value_name in generic_input_mqtt:
-                        print(
+                        logger.error(
                             f"ERROR: Duplicate values: \
                                 Please fill only one column for {input_value_name} in inputs sheet")
                         return
@@ -671,7 +660,7 @@ class Utils:
                             }
                         }
                     else:
-                        print(f"ERROR: \
+                        logger.error(f"ERROR: \
                                     MQTT params for {input_value_name} in inputs sheet is missing.")
                         return
 
@@ -682,21 +671,21 @@ class Utils:
                         data_from_file = pd.read_excel(f"./{value}", header=None)
 
                         if input_value_name in generic_input_dataset:
-                            print(f"ERROR: Duplicate values: \
+                            logger.error(f"ERROR: Duplicate values: \
                                         Please fill only one column for {input_value_name}")
                             return
 
                         processed_data_from_file = data_from_file[data_from_file.columns[0]]
                         generic_input_dataset[input_value_name] = processed_data_from_file.tolist()
                     else:
-                        print(
+                        logger.error(
                             f"ERROR: Filename {value} provided for input {input_value_name} \
                                 in inputs sheet is missing. Please check again")
                         return
                     continue
 
                 if input_value_name in generic_input_mqtt:
-                    print(
+                    logger.error(
                         f"ERROR: Duplicate values: \
                             Please fill only one column for {input_value_name} in inputs sheet")
                     return
@@ -707,13 +696,13 @@ class Utils:
         missing_inputs = set(input_fields).difference(filled_inputs)
 
         for input_name in missing_inputs:
-            print(f"ERROR: {input_name} field in inputs sheet is missing")
+            logger.error(f"ERROR: {input_name} field in inputs sheet is missing")
             return
 
         # Extract outputs sheet
         outputs = excel_data["outputs"].drop(labels=["Description"], axis=1)
         outputs.drop(outputs.columns[1], axis=1, inplace=True)
-        outputs[outputs.isna()] = "empty_input_values"
+        outputs.fillna("empty_input_values", inplace=True)
 
         generic_output_data = {}
         output_fields = []
@@ -738,17 +727,17 @@ class Utils:
                     }
                 }
             else:
-                print(f"ERROR: MQTT params for {output_value_name} in inputs sheet is missing.")
+                logger.error(f"ERROR: MQTT params for {output_value_name} in inputs sheet is missing.")
                 return
 
         missing_outputs = set(output_fields).difference(set(generic_output_data))
         for output_name in missing_outputs:
-            print(f"ERROR: {output_name} field in outputs sheet is missing")
+            logger.error(f"ERROR: {output_name} field in outputs sheet is missing")
             return
 
         # Extract data from start sheet and store it as dict
         start_config = excel_data["start"].drop(labels=["Description"], axis=1)
-        start_config[start_config.isna()] = "empty_input_values"
+        start_config.fillna("empty_input_values", inplace=True)
 
         generic_start_config_data = {}
         for i, row in start_config.iterrows():
@@ -757,7 +746,7 @@ class Utils:
             if config_value != "empty_input_values":
                 generic_start_config_data[config_name] = config_value
             else:
-                print(f"ERROR: {config_name} field in start config sheet is missing")
+                logger.error(f"ERROR: {config_name} field in start config sheet is missing")
                 return
 
         # Store all data in a dict
