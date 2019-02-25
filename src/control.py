@@ -37,7 +37,7 @@ class Data_output:
                             id = self.util.get_id(self.path,"all")
                             id_list = self.util.get_id_list(id)
                         else:
-                            id = value
+                            id_list = value
                     else:
                         id = self.util.get_id(self.path, None)
                         id_list = self.util.get_id_list(id)
@@ -58,11 +58,13 @@ class Data_output:
 
                 elif key is "add":
                     if len(value) == 2:
-                        self.add(str(value[0]), str(value[1]))
+                        id_list=[value[1]]
+                        self.add(str(value[0]),id_list)
                     else:
                         id=self.util.get_id(self.path, None)
                         if id is not None:
-                            self.add(str(value[0]), id)
+                            id_list = self.util.get_id_list(id)
+                            self.add(str(value[0]), id_list)
                         else:
                             self.add(str(value[0]))
 
@@ -155,12 +157,12 @@ class Data_output:
             #logger.debug("List of the following instances: " + str(id))
             for element in id:
                 #logger.debug("List of "+str(element))
-                for model_name in element.keys():
-                    for list_2 in element[model_name]:
-                        for instance_name in list_2.keys():
-                            self.id_to_add = list_2[instance_name]
+                #for model_name in element.keys():
+                    #for list_2 in element[model_name]:
+                        #for instance_name in list_2.keys():
+                            #self.id_to_add = list_2[instance_name]
                 #logger.debug("id to add"+str(self.id_to_add))
-                endpoint = "v1/outputs/mqtt/"+self.id_to_add
+                endpoint = "v1/outputs/mqtt/"+ element
                 response=self.connection.send_request("PUT", endpoint, payload, headers)
                 logger.debug(json.dumps(response, indent=4, sort_keys=True))
         else:

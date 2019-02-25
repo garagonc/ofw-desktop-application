@@ -42,7 +42,8 @@ def vararg_callback_1(option, opt_str, value, parser):
             break
 
         if counter > 0:
-            logger.error("Too many parameters for stop")
+            logger.error("Too many parameters")
+            logger.error(parser.usage)
             sys.exit(0)
         counter += 1
         value.append(arg)
@@ -70,7 +71,8 @@ def vararg_callback(option, opt_str, value, parser):
             break
 
         if counter > 1:
-            logger.error("Too many options for add")
+            logger.error("Too many parameters")
+            logger.error(parser.usage)
             sys.exit(0)
         counter += 1
         value.append(arg)
@@ -98,7 +100,8 @@ def vararg_callback_2(option, opt_str, value, parser):
             break
 
         if counter > 2:
-            logger.error("Too many options for add")
+            logger.error("Too many parameter")
+            logger.error(parser.usage)
             sys.exit(0)
         counter += 1
         value.append(arg)
@@ -137,13 +140,13 @@ def parser():
                              dest="start_instance", metavar='<filepath> <id>',
                              action="callback", callback=vararg_callback)
     # command_group.add_option("--start",help="starts the optimnization",dest="start",metavar='<filepath> <id>', nargs=2, action="store")
-    command_group.add_option("--stop", help="<id or instance_name>  stops the optimnization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
-                             metavar='<id>', action="callback", callback=vararg_callback_1)
+    command_group.add_option("--stop", help="<id or model_name><instance_name>  stops the optimnization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
+                             metavar='<id>', action="callback", callback=vararg_callback)
     command_group.add_option("--status", help="receives the status of the optimnization", dest="status", action="store_true")
 
     command_group.add_option("--restart",
 
-                             help="<model_name or instance name> <filepath> <id>   stops the running instances and starts the optimization again. If filepath not present takes the last configuration used. Write None if no filepath is needed.  If id is not present takes the last id used. Write all to start all instances",
+                             help="<model_name> <filepath or instance name> <id>   stops the running instances and starts the optimization again. If filepath not present takes the last configuration used. Write None if no filepath is needed.  If id is not present takes the last id used. Write all to start all instances",
                              dest="restart", metavar='<filepath> <id>',
                              action="callback", callback=vararg_callback_2)
 
