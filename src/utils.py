@@ -50,6 +50,7 @@ class Utils:
     def createFolderPath(self, folder_path):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
+            os.chmod(folder_path,0o777)
 
     def isFile(self, path):
         if os.path.isfile(path):
@@ -148,6 +149,7 @@ class Utils:
         self.createFolderPath(folder_path)
 
         if isinstance(data_list_of_dicts, list):
+            logger.debug("Storing the data")
             with open(path, 'w') as outfile:
                 ids = data_list_of_dicts
                 outfile.write(json.dumps(ids, indent=4, sort_keys=True))
