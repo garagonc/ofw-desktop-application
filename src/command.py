@@ -409,9 +409,9 @@ class Command:
 
                         self.input_data = data["inputs"]
                         self.input_data_dataset = self.input_data["dataset"]
-                        #logger.debug("input_dataset " + str(self.input_data_dataset))
+                        logger.debug("input_dataset " + str(self.input_data_dataset))
                         self.input_data_mqtt = self.input_data["mqtt"]
-                        #logger.debug("input_mqtt " + str(self.input_data_mqtt))
+                        logger.debug("input_mqtt " + str(self.input_data_mqtt))
                         self.output_data = data["outputs"]
                         #logger.debug("outputs " + str(self.output_data))
                         self.start_data = data["start"]
@@ -434,8 +434,25 @@ class Command:
                     #if id is None:
                     # if the id is not present, we make a POST of the input
                     logger.debug("Registering inputs")
-                    if isinstance(self.input_data_mqtt, dict):
-                        if len(self.input_data_mqtt) > 0:
+                    if isinstance(self.input_data, dict):
+
+                        if len(self.input_data_dataset["generic"]) > 0:
+                            #id_list=None
+                            if id_list:
+                                logger.debug("Adding inputs dataset with id")
+                                """self.input_object.add(self.input_data_dataset, id_list, model_name, element,
+                                                      self.id_path,
+                                                      self.connection)"""
+                            else:
+                                if len(self.input_data_dataset) > 0:
+                                    logger.debug("Adding inputs dataset")
+                                    self.input_object.add(self.input_data_dataset, None, model_name, element,
+                                                          self.id_path,
+                                                          self.connection)
+                                    id = self.util.get_id(self.id_path, None, model_name, element)
+                                    id_list = self.util.get_id_list(id)
+
+                        if len(self.input_data_mqtt["generic"]) > 0:
                             if id_list:
                                 logger.debug("Adding inputs mqtt with id")
                                 self.input_object.add(self.input_data_mqtt, id_list, model_name, element, self.id_path,
@@ -448,19 +465,6 @@ class Command:
                                 id_list = self.util.get_id_list(id)
                                 logger.debug("id_list "+str(id_list))
 
-                        if len(self.input_data_dataset) > 0:
-                            if id_list:
-                                logger.debug("Adding inputs dataset with id")
-                                self.input_object.add(self.input_data_dataset, id_list, model_name, element,
-                                                      self.id_path,
-                                                      self.connection)
-                            else:
-                                if len(self.input_data_dataset) > 0:
-                                    logger.debug("Adding inputs dataset")
-                                    self.input_object.add(self.input_data_dataset, None, model_name, element, self.id_path,
-                                                          self.connection)
-                                    id = self.util.get_id(self.id_path, None, model_name, element)
-                                    id_list = self.util.get_id_list(id)
                         #else:
                             #logger.error("No input configuration present")
                             #sys.exit(0)
@@ -479,7 +483,7 @@ class Command:
 
                     # after adding the input the otuput is always added
                     if isinstance(self.output_data, dict):
-                        if len(self.output_data) > 0:
+                        if len(self.output_data["generic"]) > 0:
                             #id = self.util.get_id(self.id_path, None, model_name, instance_name)
                             self.output_object.add(self.output_data, id_list, self.connection)
                     else:

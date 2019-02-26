@@ -146,11 +146,16 @@ class Data_source:
                 endpoint = "v1/inputs/dataset/ids"
                 response = self.connection.send_request("GET", endpoint, payload, headers)
                 list_to_send = []
-                list_to_send = response
+                if not isinstance(response,str):
+                    list_to_send = response
+
+                #logger.debug("list_to_send "+str(list_to_send))
                 endpoint = "v1/inputs/mqtt/ids"
                 response = self.connection.send_request("GET", endpoint, payload, headers)
-                for element in response:
-                    list_to_send.append(element)
+                if not isinstance(response, str):
+                    for element in response:
+                        list_to_send.append(element)
+                    #logger.debug("list_to_send " + str(list_to_send))
                 if self.flag:
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
                 return list_to_send
@@ -213,7 +218,7 @@ class Data_source:
 
     def add(self, filepath, id=None, model_name=None, instance_name=None, id_path=None, connection=None):
         logger.debug("Add inputs")
-        logger.debug("id "+str(id) + " type "+str(type(id)))
+        #logger.debug("id "+str(id) + " type "+str(type(id)))
 
         if not id_path:
             path = self.command_to_execute["host"] + "-" + self.id_path
@@ -239,7 +244,7 @@ class Data_source:
                 sys.exit(0)
         else:
             payload=json.dumps(filepath)
-            logger.debug("payload "+str(payload))
+            #logger.debug("payload "+str(payload))
 
         headers = {
             'Content-Type': "application/json",
@@ -264,7 +269,7 @@ class Data_source:
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
         #if no id present POST
         else:
-            logger.debug("Estuve aqui")
+            #logger.debug("Estuve aqui")
             if "mqtt" in payload:
                 #logger.debug("mqtt")
                 endpoint = "v1/inputs/mqtt"
@@ -274,11 +279,11 @@ class Data_source:
                 endpoint = "v1/inputs/dataset"
 
             try:
-                logger.debug("Estuve aqui")
+                #logger.debug("Estuve aqui")
                 response = self.connection.send_request_add("POST", endpoint, payload, headers)
-                logger.debug("response "+str(response))
+                #logger.debug("response "+str(response))
                 if response is not None:
-                    logger.debug("Estuve aqui 3")
+                    #logger.debug("Estuve aqui 3")
                     logger.debug("Id: " + json.dumps(response, indent=4, sort_keys=True))
                     #logger.debug("instance name "+str(instance_name))
                     #logger.debug("model name " + str(model_name))
@@ -298,6 +303,7 @@ class Data_source:
                 sys.exit(0)
 
     def collect_store_ids_from_ofw(self,path):
+        path=self.util.get_path(path)
         if not self.util.isFile(path):
             ids=self.list(None,"ids")
             #logger.debug("ids list "+str(ids))
