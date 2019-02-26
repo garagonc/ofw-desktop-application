@@ -724,7 +724,7 @@ class Utils:
                         return
                     continue
 
-                generic_input_mqtt[input_value_name] = value
+                generic_input_dataset[input_value_name] = value
 
         filled_inputs = set(generic_input_mqtt).union(set(generic_input_dataset))
         missing_inputs = set(input_fields).difference(filled_inputs)
