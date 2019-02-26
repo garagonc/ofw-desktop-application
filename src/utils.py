@@ -53,7 +53,6 @@ class Utils:
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-
     def isFile(self, path):
         path = self.get_path(path)
         if os.path.isfile(path):
@@ -153,9 +152,8 @@ class Utils:
     def getFolderPath(self, path):
         return os.path.dirname(os.path.abspath(path))
 
-
     def get_path(self, relative_path):
-        path_to_send= os.path.abspath(relative_path)
+        path_to_send = os.path.abspath(relative_path)
         #logger.debug("abs path "+str(path_to_send))
         return path_to_send
 
@@ -166,13 +164,13 @@ class Utils:
 
         if isinstance(data_list_of_dicts, list):
             logger.debug("Storing the data")
-            #path_to_write=self.get_path(path)
+            # path_to_write=self.get_path(path)
             with open(path, 'w') as outfile:
                 ids = data_list_of_dicts
                 outfile.write(json.dumps(ids, indent=4, sort_keys=True))
             logger.debug("input data saved in " + str(path))
         else:
-            logger.debug("Storing the data 2 " + str(type(data_list_of_dicts)) )
+            logger.debug("Storing the data 2 " + str(type(data_list_of_dicts)))
             #path_to_write = self.get_path(path)
             with open(path, 'w') as outfile:
                 outfile.write(data_list_of_dicts)
@@ -681,9 +679,13 @@ class Utils:
                                 Please fill only one column for {input_value_name} in inputs sheet")
                         return
 
+                    if qos == "empty_input_values":
+                        qos = 1
+
                     if (host != "empty_input_values"
                             and topic != "empty_input_values"
-                            and qos != "empty_input_values"):
+                            and qos != "empty_input_values"
+                            and qos in [0, 1, 2]):
                         generic_input_mqtt[input_value_name] = {
                             "mqtt": {
                                 "qos": qos,
@@ -693,14 +695,14 @@ class Utils:
                         }
                     else:
                         logger.error(f"ERROR: \
-                                    MQTT params for {input_value_name} in inputs sheet is missing.")
+                                    MQTT params for {input_value_name} in inputs sheet is missing or wrong.")
                         return
 
                     continue
 
                 if "filename" in key:
-                    #path=os.path.join("instances",value)
-                    folder_path=self.getFolderPath(filepath)
+                    # path=os.path.join("instances",value)
+                    folder_path = self.getFolderPath(filepath)
                     path = os.path.join(folder_path, value)
                     logger.debug("path xlsx "+str(path))
                     if os.path.isfile(path):
@@ -752,9 +754,13 @@ class Utils:
             topic = outputs.loc[row_num + 1]["MQTT params"]
             qos = outputs.loc[row_num + 2]["MQTT params"]
 
+            if qos == "empty_input_values":
+                qos = 1
+
             if (host != "empty_input_values"
                     and topic != "empty_input_values"
-                    and qos != "empty_input_values"):
+                    and qos != "empty_input_values"
+                    and qos in [0, 1, 2]):
                 generic_output_data[output_value_name] = {
                     "mqtt": {
                         "qos": qos,
@@ -763,13 +769,13 @@ class Utils:
                     }
                 }
             else:
-                logger.error(f"ERROR: MQTT params for {output_value_name} in inputs sheet is missing.")
+                logger.error(f"ERROR: MQTT params for {output_value_name} in inputs sheet is missing or wrong.")
                 return
 
-        missing_outputs = set(output_fields).difference(set(generic_output_data))
-        for output_name in missing_outputs:
-            logger.error(f"ERROR: {output_name} field in outputs sheet is missing")
-            return
+        # missing_outputs = set(output_fields).difference(set(generic_output_data))
+        # for output_name in missing_outputs:
+        #     logger.error(f"ERROR: {output_name} field in outputs sheet is missing")
+        #     return
 
         # Extract data from start sheet and store it as dict
         start_config = excel_data["start"].drop(labels=["Description"], axis=1)
@@ -780,6 +786,9 @@ class Utils:
             config_name = row["configs"]
             config_value = row["Value"]
             if config_value != "empty_input_values":
+                if config_name == "solver" and config_value not in ["ipopt", "glpk", "bonmin"]:
+                    logger.error("ERROR: Please choose one of these solvers in config sheet: ipopt, glpk or bonmin")
+                    return
                 generic_start_config_data[config_name] = config_value
             else:
                 logger.error(f"ERROR: {config_name} field in start config sheet is missing")
