@@ -61,10 +61,14 @@ class Http:
 
         res = self.conn.getresponse()
         #logger.debug("Response reason: " + str(res.getheader("Location")))
-        header=res.getheader("Location")
-        path=os.path.split(header)
-        header = path[1]
+        header=""
+        if res.getheader("Location"):
+            header=res.getheader("Location")
+            path=os.path.split(header)
+            header = path[1]
         data = res.read()
         data=ast.literal_eval(data.decode("utf-8"))
-
-        return header
+        if header:
+            return header
+        else:
+            return data

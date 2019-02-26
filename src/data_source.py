@@ -220,6 +220,7 @@ class Data_source:
             path = os.path.join(self.folder_path, path)
         else:
             path=id_path
+        path=self.util.get_path(path)
 
         if connection is not None:
             self.connection=connection
@@ -238,6 +239,7 @@ class Data_source:
                 sys.exit(0)
         else:
             payload=json.dumps(filepath)
+            logger.debug("payload "+str(payload))
 
         headers = {
             'Content-Type': "application/json",
@@ -262,6 +264,7 @@ class Data_source:
                     logger.debug(json.dumps(response, indent=4, sort_keys=True))
         #if no id present POST
         else:
+            logger.debug("Estuve aqui")
             if "mqtt" in payload:
                 #logger.debug("mqtt")
                 endpoint = "v1/inputs/mqtt"
@@ -271,8 +274,11 @@ class Data_source:
                 endpoint = "v1/inputs/dataset"
 
             try:
+                logger.debug("Estuve aqui")
                 response = self.connection.send_request_add("POST", endpoint, payload, headers)
+                logger.debug("response "+str(response))
                 if response is not None:
+                    logger.debug("Estuve aqui 3")
                     logger.debug("Id: " + json.dumps(response, indent=4, sort_keys=True))
                     #logger.debug("instance name "+str(instance_name))
                     #logger.debug("model name " + str(model_name))
@@ -283,6 +289,9 @@ class Data_source:
                     data_relocated=self.util.relocate_id([response],data,model_name,instance_name)
                     #logger.debug("data relocated "+str(data_relocated))
                     self.util.store(path,data_relocated)
+                else:
+                    logger.error("Error while registering the input")
+                    sys.exit(0)
 
             except Exception as e:
                 logger.error(e)

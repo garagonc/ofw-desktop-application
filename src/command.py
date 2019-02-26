@@ -438,7 +438,7 @@ class Command:
                         if len(self.input_data_mqtt) > 0:
                             if id_list:
                                 logger.debug("Adding inputs mqtt with id")
-                                self.input_object.add(self.input_data, id_list, model_name, element, self.id_path,
+                                self.input_object.add(self.input_data_mqtt, id_list, model_name, element, self.id_path,
                                                       self.connection)
                             else:
                                 logger.debug("Adding inputs mqtt")
@@ -446,6 +446,7 @@ class Command:
                                                       self.connection)
                                 id = self.util.get_id(self.id_path, None, model_name, element)
                                 id_list = self.util.get_id_list(id)
+                                logger.debug("id_list "+str(id_list))
 
                         if len(self.input_data_dataset) > 0:
                             if id_list:
