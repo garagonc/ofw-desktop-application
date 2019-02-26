@@ -10,11 +10,15 @@ import ntpath
 import re
 import json
 import pandas as pd
+from src.utils import Utils
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 
 class Models:
+
+    def __init__(self):
+        self.util=Utils()
 
     def path_leaf(self, path):
         head, tail = ntpath.split(path)
@@ -73,6 +77,7 @@ class Models:
                     os.makedirs(folder)
                 if response:
                     path=os.path.join(folder,model_name+".txt")
+                    path=self.util.get_path(path)
                     with open(path, 'wb') as outfile:
                         outfile.write(response)
                     logger.debug("File saved as "+ path)

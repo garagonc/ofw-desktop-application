@@ -142,6 +142,7 @@ class Instance:
                         self.input_object.delete(id_list, path, self.connection)
                         folder = "instances"
                         instance_path = os.path.join(folder, model_name_input, instance_name_input) + ".xlsx"
+                        #instance_path =self.util.get_path(instance_path)
                         self.util.deleteFile(instance_path)
                         folder_path= os.path.join(folder, model_name_input)
                         if self.util.is_dir_empty(folder_path):
@@ -156,6 +157,7 @@ class Instance:
                     instance_name_input = self.util.get_instance_name(id)
                     folder = "instances"
                     instance_path = os.path.join(folder, model_name_input, instance_name_input) + ".xlsx"
+                    #instance_path = self.util.get_path(instance_path)
                     self.util.deleteFile(instance_path)
                     folder_path = os.path.join(folder, model_name_input)
                     if self.util.is_dir_empty(folder_path):
@@ -176,6 +178,7 @@ class Instance:
         folder = "instances"
         folder_path = os.path.join(folder, model_name)
         path = os.path.join(folder, model_name, instance_name) + ".xlsx"
+        path=self.util.get_path(path)
         # logger.debug("path "+str(path))
         try:
             if not os.path.exists(folder_path):

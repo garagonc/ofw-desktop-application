@@ -48,33 +48,21 @@ class Utils:
                                     }
 
     def createFolderPath(self, folder_path):
+        folder_path = self.get_path(folder_path)
+        #logger.debug("folder path "+str(folder_path))
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
-            #os.chmod(folder_path,0o777)
-            """import win32security
-            import ntsecuritycon as con
 
-            FILENAME = folder_path
-
-            userx, domain, type = win32security.LookupAccountName("", "User X")
-            usery, domain, type = win32security.LookupAccountName("", "User Y")
-
-            sd = win32security.GetFileSecurity(FILENAME, win32security.DACL_SECURITY_INFORMATION)
-            dacl = sd.GetSecurityDescriptorDacl()  # instead of dacl = win32security.ACL()
-
-            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_GENERIC_READ | con.FILE_GENERIC_WRITE, userx)
-            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_ALL_ACCESS, usery)
-
-            sd.SetSecurityDescriptorDacl(1, dacl, 0)  # may not be necessary
-            win32security.SetFileSecurity(FILENAME, win32security.DACL_SECURITY_INFORMATION, sd)"""
 
     def isFile(self, path):
+        path = self.get_path(path)
         if os.path.isfile(path):
             return True
         else:
             return False
 
     def deleteFile(self, path):
+        path = self.get_path(path)
         if self.isFile(path):
             try:
                 os.remove(path)
@@ -84,6 +72,7 @@ class Utils:
             logger.error("Path not existing")
 
     def delete_folder(self, folder_path):
+        folder_path = self.get_path(folder_path)
         shutil.rmtree(folder_path, ignore_errors=True)
 
     def delete_files_instances(self, id_list):
@@ -103,7 +92,8 @@ class Utils:
                     logger.error("Path not existing")
 
     def get_all_files_from_folder(self, folder_path):
-
+        folder_path = self.get_path(folder_path)
+        #logger.debug("folder path get all files "+str(folder_path))
         if os.path.isdir(folder_path):
             if not self.is_dir_empty(folder_path):
                 values = []
@@ -122,6 +112,7 @@ class Utils:
             return None
 
     def get_all_folder_names(self, folder_path):
+        folder_path = self.get_path(folder_path)
         if os.path.isdir(folder_path):
             if not self.is_dir_empty(folder_path):
                 values = []
@@ -140,6 +131,7 @@ class Utils:
             return None
 
     def delete_all_files_from_folder(self, folder_path):
+        folder_path = self.get_path(folder_path)
         for the_file in os.listdir(folder_path):
             file_path = os.path.join(folder_path, the_file)
             try:
@@ -150,48 +142,39 @@ class Utils:
             except Exception as e:
                 print(e)
 
-    def is_dir_empty(self, path):
-        for dirpath, dirnames, files in os.walk(path):
+    def is_dir_empty(self, folder_path):
+        folder_path = self.get_path(folder_path)
+        for dirpath, dirnames, files in os.walk(folder_path):
             if files or dirnames:
                 return False
             if not files or dirnames:
                 return True
 
     def getFolderPath(self, path):
-        #dir_path = os.path.dirname(os.path.realpath(__file__))
-        #logger.debug("dir_path " + str(dir_path))
-        #dir_path_total=os.path.join(dir_path,path)
-        #logger.debug("dir_path_total " + str(dir_path_total))
-        #dir_path_return= os.path.dirname(os.path.abspath(dir_path_total))
-        #logger.debug("dir_path_return " + str(dir_path_return))
         return os.path.dirname(os.path.abspath(path))
-        #return dir_path_return
+
 
     def get_path(self, relative_path):
-        #logger.debug("relative_path "+str(relative_path))
-        #dir_path = os.path.dirname(os.path.realpath(__file__))
-        #logger.debug("dir_path " + str(dir_path))
-        #dir_path_total = os.path.join(dir_path, relative_path)
-        #logger.debug("dir_path_total " + str(dir_path_total))
         path_to_send= os.path.abspath(relative_path)
-        logger.debug("abs path "+str(path_to_send))
+        #logger.debug("abs path "+str(path_to_send))
         return path_to_send
 
     def store(self, path, data_list_of_dicts):
-        folder_path = self.getFolderPath(path)
-        self.createFolderPath(folder_path)
+        path = self.get_path(path)
+        logger.debug("path "+str(path))
+        self.createFolderPath(path)
 
         if isinstance(data_list_of_dicts, list):
             logger.debug("Storing the data")
-            path_to_write=self.get_path(path)
-            with open(path_to_write, 'w') as outfile:
+            #path_to_write=self.get_path(path)
+            with open(path, 'w') as outfile:
                 ids = data_list_of_dicts
                 outfile.write(json.dumps(ids, indent=4, sort_keys=True))
             logger.debug("input data saved in " + str(path))
         else:
-            logger.debug("Storing the data 2")
-            path_to_write = self.get_path(path)
-            with open(path_to_write, 'w') as outfile:
+            logger.debug("Storing the data 2 " + str(type(data_list_of_dicts)) )
+            #path_to_write = self.get_path(path)
+            with open(path, 'w') as outfile:
                 outfile.write(data_list_of_dicts)
             logger.debug("input data saved in " + str(path))
 
@@ -215,6 +198,7 @@ class Utils:
 
     def get_host(self, path):
         #logger.debug("getting ids")
+        path = self.get_path(path)
         if os.path.isfile(path):
             with open(path, "r") as myfile:
                 host = myfile.read()
@@ -225,6 +209,7 @@ class Utils:
     def instance_exist(self, model_name, instance_name):
         folder = "instances"
         path = os.path.join(folder, model_name, instance_name) + ".xlsx"
+        path = self.get_path(path)
         if os.path.isfile(path):
             return True
         else:
@@ -233,6 +218,7 @@ class Utils:
     def model_folder_exist(self, model_name):
         folder = "instances"
         path = os.path.join(folder, model_name)
+        path = self.get_path(path)
         if os.path.isdir(path):
             return True
         else:
@@ -249,6 +235,7 @@ class Utils:
         """
 
         #logger.debug("getting id")
+        path = self.get_path(path)
         if os.path.isfile(path):
             with open(path, "r") as myfile:
                 id = json.load(myfile)
@@ -404,6 +391,7 @@ class Utils:
                         return None
 
     def integrate_id_in_model_name(self, path, id, model_name_input, instance_name_input):
+        path = self.get_path(path)
         if os.path.isfile(path):
             try:
                 id_from_file = self.get_id(path, "all")
@@ -504,9 +492,9 @@ class Utils:
                     id {str} -- Id to be erased from the config
                     model_name_input {str} -- model_name to erase
                 """
-        path_new = path
+        path = self.get_path(path)
         #logger.debug("id to erase "+str(id))
-        if os.path.isfile(path_new):
+        if os.path.isfile(path):
             try:
                 id_from_file = self.get_id(path, "all")
                 #logger.debug("id from file "+str(id_from_file))
@@ -562,6 +550,7 @@ class Utils:
             data {dict} -- Input data with list of config to be filled
             filepath {str} -- File path of the excel file to be created
         """
+        filepath = self.get_path(filepath)
         if os.path.isfile(filepath):
             logger.error("File already exists. Cannot overwrite file")
         else:
@@ -653,6 +642,7 @@ class Utils:
         Returns:
             dict -- Python dict of inputs, outputs, and start config
         """
+        filepath = self.get_path(filepath)
         if not os.path.isfile(filepath):
             logger.error(f"Error: Excel file at {filepath} is missing")
             return
@@ -709,8 +699,12 @@ class Utils:
                     continue
 
                 if "filename" in key:
-                    if os.path.isfile(value):
-                        data_from_file = pd.read_excel(value, header=None)
+                    #path=os.path.join("instances",value)
+                    folder_path=self.getFolderPath(filepath)
+                    path = os.path.join(folder_path, value)
+                    logger.debug("path xlsx "+str(path))
+                    if os.path.isfile(path):
+                        data_from_file = pd.read_excel(path, header=None)
 
                         if input_value_name in generic_input_dataset:
                             logger.error(f"ERROR: Duplicate values: \
@@ -794,8 +788,12 @@ class Utils:
         # Store all data in a dict
         data_from_xlsx = {
             "inputs": {
-                "dataset": generic_input_dataset,
-                "mqtt": generic_input_mqtt
+                "dataset": {
+                    "generic": generic_input_dataset
+                },
+                "mqtt": {
+                    "generic": generic_input_mqtt
+                }
             },
             "outputs": {
                 "generic": generic_output_data
