@@ -159,7 +159,7 @@ class Utils:
 
     def store(self, path, data_list_of_dicts):
         path = self.get_path(path)
-        folder_path= self.getFolderPath(path)
+        folder_path = self.getFolderPath(path)
         #logger.debug("path "+str(path))
         self.createFolderPath(folder_path)
 
@@ -669,16 +669,17 @@ class Utils:
                 if value == "empty_input_values":
                     continue
 
+                if (input_value_name in generic_input_mqtt
+                        or input_value_name in generic_input_dataset):
+                    logger.error(
+                        f"ERROR: Duplicate values: \
+                            Please fill only one column for {input_value_name} in inputs sheet")
+                    return
+
                 if "MQTT params" in key:
                     host = inputs.loc[row_num]["or MQTT params"]
                     topic = inputs.loc[row_num + 1]["or MQTT params"]
                     qos = inputs.loc[row_num + 2]["or MQTT params"]
-
-                    if input_value_name in generic_input_mqtt:
-                        logger.error(
-                            f"ERROR: Duplicate values: \
-                                Please fill only one column for {input_value_name} in inputs sheet")
-                        return
 
                     if qos == "empty_input_values":
                         qos = 1
@@ -723,12 +724,6 @@ class Utils:
                         return
                     continue
 
-                if input_value_name in generic_input_mqtt:
-                    logger.error(
-                        f"ERROR: Duplicate values: \
-                            Please fill only one column for {input_value_name} in inputs sheet")
-                    return
-
                 generic_input_mqtt[input_value_name] = value
 
         filled_inputs = set(generic_input_mqtt).union(set(generic_input_dataset))
@@ -760,23 +755,18 @@ class Utils:
 
             if (host != "empty_input_values"
                     and topic != "empty_input_values"
-                    and qos != "empty_input_values"
-                    and qos in [0, 1, 2]):
-                generic_output_data[output_value_name] = {
-                    "mqtt": {
-                        "qos": qos,
-                        "host": host,
-                        "topic": topic
-                    }
-                }
-            else:
-                logger.error(f"ERROR: MQTT params for {output_value_name} in inputs sheet is missing or wrong.")
-                return
+                    and qos != "empty_input_values"):
 
-        # missing_outputs = set(output_fields).difference(set(generic_output_data))
-        # for output_name in missing_outputs:
-        #     logger.error(f"ERROR: {output_name} field in outputs sheet is missing")
-        #     return
+                if qos in [0, 1, 2]:
+                    generic_output_data[output_value_name] = {
+                        "mqtt": {
+                            "qos": qos,
+                            "host": host,
+                            "topic": topic
+                        }
+                    }
+                else:
+                    logger.error(f"ERROR: MQTT params for {output_value_name}, qos should be 0, 1 or 2")
 
         # Extract data from start sheet and store it as dict
         start_config = excel_data["start"].drop(labels=["Description"], axis=1)
