@@ -405,55 +405,74 @@ class Command:
                     try:
 
                         data = self.util.read_data_from_xlsx_instance_config(instance_path)
-                        #data=1
-                        logger.debug("data " + str(data))
+                        #logger.debug("data " + str(data))
+
+                        self.input_data = data["inputs"]
+                        self.input_data_dataset = self.input_data["dataset"]
+                        #logger.debug("input_dataset " + str(self.input_data_dataset))
+                        self.input_data_mqtt = self.input_data["mqtt"]
+                        #logger.debug("input_mqtt " + str(self.input_data_mqtt))
+                        self.output_data = data["outputs"]
+                        #logger.debug("outputs " + str(self.output_data))
+                        self.start_data = data["start"]
+                        self.start_data["model_name"]= model_name
+                        logger.debug("start data " + str(self.start_data))
+                        #sys.exit(0)
+
                     except Exception as e:
                         logger.debug(e)
-                    self.input_data = self.data["input"]
-                    self.output_data = self.data["output"]
-                    self.start_data = self.data["start"]
+                        break
+                    #self.input_data = self.data["input"]
+                    #self.output_data = self.data["output"]
+                    #self.start_data = self.data["start"]
 
 
                     id = self.util.get_id(self.id_path, None, model_name, element)
                     logger.debug("instance_name " + str(element))
                     logger.debug("id " + str(id))
-                    if id is None:
-                        # if the id is not present, we make a POST of the input
-                        logger.debug("Registering inputs")
-                        if isinstance(self.input_data, dict):
-                            if len(self.input_data) > 0:
-                                logger.debug("Adding inputs")
-                                self.input_object.add(self.input_data, None, model_name, element, self.id_path,
-                                                      self.connection)
-                                id = self.util.get_id(self.id_path, None, model_name, element)
-                                id_list = self.util.get_id_list(id)
-                            else:
-                                logger.error("No input configuration present")
-                                sys.exit(0)
-                        else:
-                            logger.error("Input configuration is not a dictionary")
-                            sys.exit(0)
-                    else:
-                        id_list = self.util.get_id_list(id)
-                        id_from_file = self.util.get_id(self.id_path, "all")
-                        data_relocated = self.util.relocate_id(id_list, id_from_file)
-                        logger.debug("Data relocated")
-                        self.util.store(self.id_path, data_relocated)
-                        logger.debug("Ids relocated in memory")
-
-                        logger.debug("Registering inputs")
-                        if isinstance(self.input_data, dict):
-                            if len(self.input_data) > 0:
-                                logger.debug("Adding inputs with id")
+                    id_list = self.util.get_id_list(id)
+                    #if id is None:
+                    # if the id is not present, we make a POST of the input
+                    logger.debug("Registering inputs")
+                    if isinstance(self.input_data_mqtt, dict):
+                        if len(self.input_data_mqtt) > 0:
+                            if id_list:
+                                logger.debug("Adding inputs mqtt with id")
                                 self.input_object.add(self.input_data, id_list, model_name, element, self.id_path,
                                                       self.connection)
                             else:
-                                logger.error("No input configuration present")
-                                sys.exit(0)
-                        else:
-                            logger.error("Input configuration is not a dictionary")
-                            sys.exit(0)
+                                logger.debug("Adding inputs mqtt")
+                                self.input_object.add(self.input_data_mqtt, None, model_name, element, self.id_path,
+                                                      self.connection)
+                                id = self.util.get_id(self.id_path, None, model_name, element)
+                                id_list = self.util.get_id_list(id)
 
+                        if len(self.input_data_dataset) > 0:
+                            if id_list:
+                                logger.debug("Adding inputs dataset with id")
+                                self.input_object.add(self.input_data_dataset, id_list, model_name, element,
+                                                      self.id_path,
+                                                      self.connection)
+                            else:
+                                if len(self.input_data_dataset) > 0:
+                                    logger.debug("Adding inputs dataset")
+                                    self.input_object.add(self.input_data_dataset, None, model_name, element, self.id_path,
+                                                          self.connection)
+                                    id = self.util.get_id(self.id_path, None, model_name, element)
+                                    id_list = self.util.get_id_list(id)
+                        #else:
+                            #logger.error("No input configuration present")
+                            #sys.exit(0)
+                    else:
+                        logger.error("Input configuration is not a dictionary")
+                        sys.exit(0)
+                    #else:
+                    id_list = self.util.get_id_list(id)
+                    id_from_file = self.util.get_id(self.id_path, "all")
+                    data_relocated = self.util.relocate_id(id_list, id_from_file)
+                    logger.debug("Data relocated")
+                    self.util.store(self.id_path, data_relocated)
+                    logger.debug("Ids relocated in memory")
 
                     logger.debug("Registering outputs")
 

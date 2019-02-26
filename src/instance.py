@@ -217,7 +217,7 @@ class Instance:
             if not "#" in item:
                 data_var_1.append(item)
 
-        start=["control_frequency","horizon_in_steps","dT_in_seconds","model_name","repetition","solver"]
+        start=["control_frequency","horizon_in_steps","dT_in_seconds","repetition","solver"]
         data_to_return={}
         data_to_return["inputs"] = data_param_1
         data_to_return["outputs"] = data_var_1
