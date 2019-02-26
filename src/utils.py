@@ -159,8 +159,9 @@ class Utils:
 
     def store(self, path, data_list_of_dicts):
         path = self.get_path(path)
-        logger.debug("path "+str(path))
-        self.createFolderPath(path)
+        folder_path= self.getFolderPath(path)
+        #logger.debug("path "+str(path))
+        self.createFolderPath(folder_path)
 
         if isinstance(data_list_of_dicts, list):
             logger.debug("Storing the data")

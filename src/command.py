@@ -421,7 +421,7 @@ class Command:
 
                     except Exception as e:
                         logger.debug(e)
-                        break
+                        sys.exit(0)
                     #self.input_data = self.data["input"]
                     #self.output_data = self.data["output"]
                     #self.start_data = self.data["start"]

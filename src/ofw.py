@@ -19,8 +19,6 @@ from src.utils import Utils
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 
-host_path="hostname.config"
-folder_path="config"
 
 def vararg_callback_1(option, opt_str, value, parser):
     assert value is None
@@ -217,9 +215,14 @@ def parser():
     instance = {"add": opts.instance_add, "list": opts.instance_list, "delete": opts.instance_delete}
 
     utils=Utils()
-    utils.createFolderPath(folder_path)
+    host_path = "hostname.config"
+    folder_path = "config"
+
+    #utils.createFolderPath(folder_path)
     path=os.path.join(folder_path,host_path)
+    #logger.debug("path "+str(path))
     host = utils.get_host(path)
+    #logger.debug("host " + str(host))
     if (tgtHost == None):
         logger.debug("host "+str(host))
         if host is None:
