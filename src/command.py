@@ -404,6 +404,7 @@ class Command:
                     instance_path = os.path.join(folder, model_name, element) + ".xlsx"
                     try:
                         data = self.util.read_data_from_xlsx_instance_config(instance_path)
+                        #data=1
                         logger.debug("data " + str(data))
                     except Exception as e:
                         logger.debug(e)

@@ -50,7 +50,23 @@ class Utils:
     def createFolderPath(self, folder_path):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
-            os.chmod(folder_path,0o777)
+            #os.chmod(folder_path,0o777)
+            """import win32security
+            import ntsecuritycon as con
+
+            FILENAME = folder_path
+
+            userx, domain, type = win32security.LookupAccountName("", "User X")
+            usery, domain, type = win32security.LookupAccountName("", "User Y")
+
+            sd = win32security.GetFileSecurity(FILENAME, win32security.DACL_SECURITY_INFORMATION)
+            dacl = sd.GetSecurityDescriptorDacl()  # instead of dacl = win32security.ACL()
+
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_GENERIC_READ | con.FILE_GENERIC_WRITE, userx)
+            dacl.AddAccessAllowedAce(win32security.ACL_REVISION, con.FILE_ALL_ACCESS, usery)
+
+            sd.SetSecurityDescriptorDacl(1, dacl, 0)  # may not be necessary
+            win32security.SetFileSecurity(FILENAME, win32security.DACL_SECURITY_INFORMATION, sd)"""
 
     def isFile(self, path):
         if os.path.isfile(path):
@@ -142,7 +158,24 @@ class Utils:
                 return True
 
     def getFolderPath(self, path):
+        #dir_path = os.path.dirname(os.path.realpath(__file__))
+        #logger.debug("dir_path " + str(dir_path))
+        #dir_path_total=os.path.join(dir_path,path)
+        #logger.debug("dir_path_total " + str(dir_path_total))
+        #dir_path_return= os.path.dirname(os.path.abspath(dir_path_total))
+        #logger.debug("dir_path_return " + str(dir_path_return))
         return os.path.dirname(os.path.abspath(path))
+        #return dir_path_return
+
+    def get_path(self, relative_path):
+        #logger.debug("relative_path "+str(relative_path))
+        #dir_path = os.path.dirname(os.path.realpath(__file__))
+        #logger.debug("dir_path " + str(dir_path))
+        #dir_path_total = os.path.join(dir_path, relative_path)
+        #logger.debug("dir_path_total " + str(dir_path_total))
+        path_to_send= os.path.abspath(relative_path)
+        logger.debug("abs path "+str(path_to_send))
+        return path_to_send
 
     def store(self, path, data_list_of_dicts):
         folder_path = self.getFolderPath(path)
@@ -150,10 +183,17 @@ class Utils:
 
         if isinstance(data_list_of_dicts, list):
             logger.debug("Storing the data")
-            with open(path, 'w') as outfile:
+            path_to_write=self.get_path(path)
+            with open(path_to_write, 'w') as outfile:
                 ids = data_list_of_dicts
                 outfile.write(json.dumps(ids, indent=4, sort_keys=True))
-        logger.debug("input data saved in " + str(path))
+            logger.debug("input data saved in " + str(path))
+        else:
+            logger.debug("Storing the data 2")
+            path_to_write = self.get_path(path)
+            with open(path_to_write, 'w') as outfile:
+                outfile.write(data_list_of_dicts)
+            logger.debug("input data saved in " + str(path))
 
     def store_as_excel(self, path, data, id):
         try:
