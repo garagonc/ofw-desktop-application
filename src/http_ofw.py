@@ -1,6 +1,7 @@
 #import python_http_client
 #import http as example
 #import urllib.request as http
+
 import http.client as http
 import logging, os
 
@@ -12,7 +13,7 @@ logger = logging.getLogger(__file__)
 import ast
 
 
-class Http:
+class Http_ofw:
 
     def __init__(self, host_info):
         #print("host_info" + str(host_info))

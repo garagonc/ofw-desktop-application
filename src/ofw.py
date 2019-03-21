@@ -10,7 +10,7 @@ from src.data_source import Data_source
 from src.control import Data_output
 from src.command import Command
 from src.instance import Instance
-from src.http import Http
+from src.http_ofw import Http_ofw
 import optparse
 import logging, os
 
@@ -262,7 +262,7 @@ if __name__ == '__main__':
 
 
     #logger.debug("command to execute: "+str(command_to_execute))
-    http = Http(command_to_execute)
+    http = Http_ofw(command_to_execute)
     for key, value in command_to_execute["model"].items():
         if value is not None:
             #logger.debug("key exists "+str(key))

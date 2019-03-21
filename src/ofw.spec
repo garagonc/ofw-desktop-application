@@ -7,7 +7,7 @@ a = Analysis(['ofw.py'],
              pathex=['H:\\Doktorarbeit\\UCC\\OptiFramework\\ofw_commands\\src'],
              binaries=[],
              datas=[],
-             hiddenimports=['.'],
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -15,15 +15,6 @@ a = Analysis(['ofw.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
-def get_pandas_path():
-    import pandas
-    pandas_path = pandas.__path__[0]
-    return pandas_path
-
-dict_tree = Tree(get_pandas_path(), prefix='pandas', excludes=["*.pyc"])
-a.datas += dict_tree
-a.binaries = filter(lambda x: 'pandas' not in x[0], a.binaries)
-
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
