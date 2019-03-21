@@ -413,7 +413,7 @@ class Command:
                         self.input_data_mqtt = self.input_data["mqtt"]
                         logger.debug("input_mqtt " + str(self.input_data_mqtt))
                         self.output_data = data["outputs"]
-                        #logger.debug("outputs " + str(self.output_data))
+                        logger.debug("outputs " + str(self.output_data))
                         self.start_data = data["start"]
                         self.start_data["model_name"]= model_name
                         logger.debug("start data " + str(self.start_data))
