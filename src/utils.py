@@ -591,9 +591,11 @@ class Utils:
 
                         # Widen first column
                         if col_num == 0:
-                            sheet.set_column(col_num, col_num, col_header_width)
-                        # Shorten empty column
-                        if col_value == "":
+                            sheet.set_column(col_num, col_num,
+                                             col_header_width)
+
+                        # Shorten empty column for all except outputs
+                        if col_value == "" and not worksheet_name == "outputs":
                             sheet.set_column(col_num, col_num, short_col_width)
 
                     # Create row headers and format rows based on default inputs
@@ -614,7 +616,29 @@ class Utils:
                             # skip the rest of the code for start config
                             continue
 
-                        # Merge every three cells for row header
+                        # Different formatting for outputs config sheet
+                        if worksheet_name == "outputs":
+                            # Merge every five cells for row header for outputs
+                            first_row = 1 + (row_num * 5)
+                            last_row = first_row + 4
+                            sheet.merge_range(first_row, 0,
+                                              last_row, 0,
+                                              row_value, row_header_format)
+                            for cell_row_num, cell_row in enumerate(cell_values):
+                                for cell_col_num, cell_value in enumerate(cell_row):
+                                    # Get col name and set formatting per row or per merged range
+                                    col_header_name = col_header[cell_col_num + 1]
+
+                                    if "MQTT" in col_header_name or col_header_name == "":
+                                        sheet.write(cell_row_num + first_row, cell_col_num + 1,
+                                                    cell_value, cell_format)
+                                    else:
+                                        sheet.merge_range(first_row, cell_col_num + 1,
+                                                          last_row, cell_col_num + 1,
+                                                          "", cell_format)
+                            continue
+
+                        # Merge every three cells for row header for inputs
                         first_row = 1 + (row_num * 3)
                         last_row = first_row + 2
                         sheet.merge_range(first_row, 0,
@@ -653,7 +677,8 @@ class Utils:
 
         # Extract inputs sheet
         inputs = excel_data["inputs"]
-        inputs.drop(labels=["Description", inputs.columns[3]], axis=1, inplace=True)
+        inputs.drop(labels=["Description", inputs.columns[3]],
+                    axis=1, inplace=True)
         inputs.fillna("empty_input_values", inplace=True)
 
         generic_input_mqtt = {}
@@ -718,7 +743,8 @@ class Utils:
                             return
 
                         processed_data_from_file = data_from_file[data_from_file.columns[0]]
-                        generic_input_dataset[input_value_name] = processed_data_from_file.tolist()
+                        generic_input_dataset[input_value_name] = processed_data_from_file.tolist(
+                        )
                     else:
                         logger.error(
                             f"ERROR: Filename {value} provided for input {input_value_name} \
@@ -728,11 +754,13 @@ class Utils:
 
                 generic_input_dataset[input_value_name] = value
 
-        filled_inputs = set(generic_input_mqtt).union(set(generic_input_dataset))
+        filled_inputs = set(generic_input_mqtt).union(
+            set(generic_input_dataset))
         missing_inputs = set(input_fields).difference(filled_inputs)
 
         for input_name in missing_inputs:
-            logger.error(f"ERROR: {input_name} field in inputs sheet is missing")
+            logger.error(
+                f"ERROR: {input_name} field in inputs sheet is missing")
             return
 
         # Extract outputs sheet
@@ -744,13 +772,15 @@ class Utils:
         output_fields = []
 
         # Extract data from output sheet and store as dict
-        for row_num in range(0, len(outputs), 3):
+        for row_num in range(0, len(outputs), 5):
             output_value_name = outputs.loc[row_num]["Output_name"]
             output_fields.append(output_value_name)
 
             host = outputs.loc[row_num]["MQTT params"]
             topic = outputs.loc[row_num + 1]["MQTT params"]
             qos = outputs.loc[row_num + 2]["MQTT params"]
+            unit = outputs.loc[row_num + 3]["MQTT params"]
+            horizon_values = outputs.loc[row_num + 4]["MQTT params"]
 
             if qos == "empty_input_values":
                 qos = 1
@@ -765,10 +795,13 @@ class Utils:
                             "qos": qos,
                             "host": host,
                             "topic": topic
-                        }
+                        },
+                        "unit": unit,
+                        "horizon_values": horizon_values
                     }
                 else:
-                    logger.error(f"ERROR: MQTT params for {output_value_name}, qos should be 0, 1 or 2")
+                    logger.error(
+                        f"ERROR: MQTT params for {output_value_name}, qos should be 0, 1 or 2")
 
         # Extract data from start sheet and store it as dict
         start_config = excel_data["start"].drop(labels=["Description"], axis=1)
@@ -780,11 +813,13 @@ class Utils:
             config_value = row["Value"]
             if config_value != "empty_input_values":
                 if config_name == "solver" and config_value not in ["ipopt", "glpk", "bonmin"]:
-                    logger.error("ERROR: Please choose one of these solvers in config sheet: ipopt, glpk or bonmin")
+                    logger.error(
+                        "ERROR: Please choose one of these solvers in config sheet: ipopt, glpk or bonmin")
                     return
                 generic_start_config_data[config_name] = config_value
             else:
-                logger.error(f"ERROR: {config_name} field in start config sheet is missing")
+                logger.error(
+                    f"ERROR: {config_name} field in start config sheet is missing")
                 return
 
         # Store all data in a dict
