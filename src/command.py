@@ -426,11 +426,15 @@ class Command:
                     #self.output_data = self.data["output"]
                     #self.start_data = self.data["start"]
 
-
+                    logger.debug("id path: "+str(self.id_path))
+                    logger.debug("model name "+str(model_name))
+                    logger.debug("element "+str(element))
                     id = self.util.get_id(self.id_path, None, model_name, element)
                     logger.debug("instance_name " + str(element))
                     logger.debug("id " + str(id))
                     id_list = self.util.get_id_list(id)
+                    logger.debug("id list" + str(id_list))
+                    #sys.exit(0)
                     #if id is None:
                     # if the id is not present, we make a POST of the input
                     logger.debug("Registering inputs")
@@ -440,9 +444,9 @@ class Command:
                             #id_list=None
                             if id_list:
                                 logger.debug("Adding inputs dataset with id")
-                                """self.input_object.add(self.input_data_dataset, id_list, model_name, element,
+                                self.input_object.add(self.input_data_dataset, id_list, model_name, element,
                                                       self.id_path,
-                                                      self.connection)"""
+                                                      self.connection)
                             else:
                                 if len(self.input_data_dataset) > 0:
                                     logger.debug("Adding inputs dataset")
