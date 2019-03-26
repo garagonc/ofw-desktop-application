@@ -45,7 +45,7 @@ class Utils:
                                                 ['topic', '', ''],
                                                 ['qos', '', ''],
                                                 ['unit', '', ''],
-                                                ['control', '', '']],
+                                                ['horizon_steps', '', '']],
                                     'start': [['', '']]
                                     }
 
@@ -237,6 +237,9 @@ class Utils:
 
         # logger.debug("getting id")
         path = self.get_path(path)
+        #logger.debug("path "+str(path))
+
+
         if os.path.isfile(path):
             with open(path, "r") as myfile:
                 id = json.load(myfile)
@@ -254,6 +257,7 @@ class Utils:
                 sys.exit(0)
 
         elif model_name_input is not None:
+            #logger.debug("model_name_input " + str(model_name_input))
             if "all" in model_name_input:
                 dict_1 = {}
                 for list_1 in id:
@@ -293,7 +297,8 @@ class Utils:
                     return [dict_1]
 
                 else:
-                    # logger.debug("Instance name and model_name present")
+                    #logger.debug("instance_name " + str(instance_name_input))
+                    #logger.debug("Instance name and model_name present")
                     # logger.debug("id "+str(id))
 
                     # return all the ids for the given model name
@@ -316,26 +321,27 @@ class Utils:
 
                     # returns the id(s) with the given model and instance names
                     else:
+                        logger.debug("id will be collected")
                         dict_1 = {}
                         for list_1 in id:
-                            # logger.debug("List of " + str(list_1))
+                            #logger.debug("List of " + str(list_1))
                             for model_name in list_1.keys():
-                                if model_name_input in model_name:
-                                    # logger.debug("model_name " + str(model_name))
+                                if model_name_input == model_name:
+                                    #logger.debug("model_name " + str(model_name))
                                     list_id = []
                                     for element in list_1[model_name]:
-                                        # logger.debug("eleemtn "+str(element))
+                                        #logger.debug("eleemtn "+str(element))
 
                                         for instance_name in element.keys():
                                             if instance_name_input == instance_name:
                                                 list_id.append(element)
-                                                # logger.debug("list_id " + str(list_id))
+                                                #logger.debug("list_id " + str(list_id))
                                     if len(list_id) > 0:
                                         dict_1[model_name] = list_id
                                     else:
                                         return None
 
-                        # logger.debug("dict_1 " + str(dict_1))
+                        #logger.debug("dict_1 " + str(dict_1))
                         # logger.debug("len dict_1 " + str(len(dict_1)))
                         if len(dict_1) > 0:
                             return [dict_1]
@@ -494,7 +500,7 @@ class Utils:
                     model_name_input {str} -- model_name to erase
                 """
         path = self.get_path(path)
-        # logger.debug("id to erase "+str(id))
+        logger.debug("id to erase "+str(id))
         if os.path.isfile(path):
             try:
                 id_from_file = self.get_id(path, "all")
@@ -537,8 +543,8 @@ class Utils:
                 # logger.debug("values model_name" + str(values))
 
                 if len(values) == 0:
-                    os.remove(path_new)
-                    logger.debug("File " + path_new + " erased")
+                    os.remove(path)
+                    logger.debug("File " + path + " erased")
                 else:
                     self.store(path, values)
             except Exception as e:
@@ -798,7 +804,7 @@ class Utils:
                 qos = 1
 
             if unit == "empty_input_values":
-                unit = None
+                unit = "None"
 
             if (host != "empty_input_values"
                     and topic != "empty_input_values"
