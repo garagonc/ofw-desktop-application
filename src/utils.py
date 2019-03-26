@@ -40,7 +40,8 @@ class Utils:
                                       'Description']}
         self.default_cell_values = {'inputs': [['', '', 'url', '', ''],
                                                ['', '', 'topic', '', ''],
-                                               ['', '', 'qos', '', '']],
+                                               ['', '', 'qos', '', ''],
+                                               ['', '', 'predict', '', '']],
                                     'outputs': [['url', '', ''],
                                                 ['topic', '', ''],
                                                 ['qos', '', ''],
@@ -575,7 +576,7 @@ class Utils:
                 # Formatting information
                 border_size = 2
                 col_header_width = 30
-                normal_col_width = 20
+                normal_col_width = 15
                 short_col_width = 5
 
                 row_header_format.set_border(border_size)
@@ -601,8 +602,8 @@ class Utils:
                                              col_header_width)
 
                         # Shorten empty column for all except outputs
-                        if col_value == "" and not worksheet_name == "outputs":
-                            sheet.set_column(col_num, col_num, short_col_width)
+                        if col_value == "":
+                            sheet.set_column(col_num, col_num, normal_col_width)
 
                     # Create row headers and format rows based on default inputs
                     row_header = data[worksheet_name]
@@ -645,8 +646,8 @@ class Utils:
                             continue
 
                         # Merge every three cells for row header for inputs
-                        first_row = 1 + (row_num * 3)
-                        last_row = first_row + 2
+                        first_row = 1 + (row_num * 4)
+                        last_row = first_row + 3
                         sheet.merge_range(first_row, 0,
                                           last_row, 0,
                                           row_value, row_header_format)
