@@ -577,7 +577,6 @@ class Utils:
                 border_size = 2
                 col_header_width = 30
                 normal_col_width = 15
-                short_col_width = 5
 
                 row_header_format.set_border(border_size)
                 col_header_format.set_border(border_size)
@@ -693,7 +692,7 @@ class Utils:
         input_fields = []
 
         # Extract data from input sheet and store as dict
-        for row_num in range(0, len(inputs), 3):
+        for row_num in range(0, len(inputs), 4):
             input_value_name = inputs.loc[row_num]["Input_name"]
             input_fields.append(input_value_name)
 
@@ -714,6 +713,19 @@ class Utils:
                     host = inputs.loc[row_num]["or MQTT params"]
                     topic = inputs.loc[row_num + 1]["or MQTT params"]
                     qos = inputs.loc[row_num + 2]["or MQTT params"]
+                    predict = inputs.loc[row_num + 3]["or MQTT params"]
+
+                    predict = str(predict).lower()
+
+                    if predict in ["true", "1", "false", "empty_input_values"]:
+                        if predict == "true" or predict == "1":
+                            predict = True
+
+                        if predict == "false" or predict == "empty_input_values":
+                            predict = False
+                    else:
+                        raise ValueError(
+                            f"ERROR: predict for {input_value_name} should be either TRUE or FALSE: Got {predict}")
 
                     if qos == "empty_input_values":
                         qos = 1
@@ -721,13 +733,15 @@ class Utils:
                     if (host != "empty_input_values"
                             and topic != "empty_input_values"
                             and qos != "empty_input_values"
-                            and qos in [0, 1, 2]):
+                            and qos in [0, 1, 2]
+                            and predict != "empty_input_values"):
                         generic_input_mqtt[input_value_name] = {
                             "mqtt": {
                                 "qos": qos,
                                 "host": host,
                                 "topic": topic
-                            }
+                            },
+                            "predict": predict
                         }
                     else:
                         raise ValueError(f"ERROR: \
@@ -792,7 +806,7 @@ class Utils:
             horizon_values = str(horizon_values).lower()
 
             if horizon_values in ["true", "1", "false", "empty_input_values"]:
-                if horizon_values == "true" or "1":
+                if horizon_values == "true" or horizon_values == "1":
                     horizon_values = True
 
                 if horizon_values == "false" or horizon_values == "empty_input_values":
@@ -863,3 +877,8 @@ class Utils:
         }
 
         return data_from_xlsx
+
+if __name__ == "__main__":
+    utils = Utils()
+    data  = utils.read_data_from_xlsx_instance_config("./notebooks/gustavo.xlsx")
+    print(json.dumps(data, indent=4))
