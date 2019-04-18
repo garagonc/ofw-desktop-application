@@ -233,9 +233,20 @@ def parser():
     else:
         utils.store(path, tgtHost)
 
+    port_path = "port.config"
+    folder_path = "config"
+    path = os.path.join(folder_path, port_path)
+    # logger.debug("path "+str(path))
+    port = utils.get_host(path)
 
     if (tgtPort == None):
-        tgtPort = "8080"
+        logger.debug("port " + str(port))
+        if port is None:
+            tgtPort = "8080"
+        else:
+            tgtPort = port
+    else:
+        utils.store(path, tgtPort)
 
     command_to_execute["host"] = tgtHost
     command_to_execute["port"] = tgtPort
