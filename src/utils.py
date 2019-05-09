@@ -674,12 +674,14 @@ class Utils:
             dict -- Python dict of inputs, outputs, and start config
         """
         filepath = self.get_path(filepath)
+
         if not os.path.isfile(filepath):
             logger.error(f"Error: Excel file at {filepath} is missing")
             return
 
         # Read file
         excel_data = pd.read_excel(filepath, sheet_name=None)
+
 
         # Extract inputs sheet
         inputs = excel_data["inputs"]
@@ -850,9 +852,9 @@ class Utils:
             config_name = row["configs"]
             config_value = row["Value"]
             if config_value != "empty_input_values":
-                if config_name == "solver" and config_value not in ["ipopt", "glpk", "bonmin"]:
+                if config_name == "solver" and config_value not in ["ipopt", "glpk", "bonmin","gurobi","cbc"]:
                     raise ValueError(
-                        "ERROR: Please choose one of these solvers in config sheet: ipopt, glpk or bonmin")
+                        "ERROR: Please choose one of these solvers in config sheet: ipopt, glpk, bonmin, gurobi or cbc")
                     return
                 generic_start_config_data[config_name] = config_value
             else:
@@ -875,7 +877,7 @@ class Utils:
             },
             "start": generic_start_config_data
         }
-
+        #logger.debug("data "+str(data_from_xlsx))
         return data_from_xlsx
 
 if __name__ == "__main__":

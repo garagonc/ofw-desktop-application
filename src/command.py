@@ -343,45 +343,6 @@ class Command:
 
 
 
-
-        """if id is not None:
-            self.stop(id)
-
-            logger.debug("Restarting the following instances: " + str(id))
-            instance_status = {}
-            id_list = self.util.get_id_list(id)
-            logger.debug("id list " + str(id_list))
-            for element_id in id_list:
-                status = self.status()
-
-                if status:
-                    for key1, body in status["status"].items():
-                        for key, value in body.items():
-                            if "config" in key:
-                                instance_status = value
-                                break
-
-                if payload is None:
-                    payload=instance_status
-                else:
-                    payload=json.loads(payload)
-
-                if model_name == "None":
-                    pass
-                elif model_name is None:
-                    pass
-                else:
-                    payload["model_name"] = model_name
-
-
-                payload = json.dumps(payload)
-                endpoint = "v1/optimization/start/" + str(element_id)
-                response = self.connection.send_request("PUT", endpoint, payload, headers)
-                logger.debug(json.dumps(response, indent=4, sort_keys=True))
-        else:
-            logger.error("Id is missing as parameter")
-            sys.exit(0)"""
-
     def start_instance(self, model_name, instance_name):
         logger.debug("start instance")
 
@@ -403,9 +364,9 @@ class Command:
                     #Read data from file
                     instance_path = os.path.join(folder, model_name, element) + ".xlsx"
                     try:
-
+                        #logger.debug("element " + str(instance_path))
                         data = self.util.read_data_from_xlsx_instance_config(instance_path)
-                        #logger.debug("data " + str(data))
+                        logger.debug("data " + str(data))
 
                         self.input_data = data["inputs"]
                         self.input_data_dataset = self.input_data["dataset"]

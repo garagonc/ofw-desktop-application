@@ -116,8 +116,15 @@ def vararg_callback_2(option, opt_str, value, parser):
 def parser():
     desc = """OFW is an optimization framework that maps inputs and outputs to an optimization model written in pyomo.\t\t\t\t\t\t
     [1]Start registering a new model. If the model is already available in ofw, you don't have to repeat this step. \t\t\t\t\t\t
-    [2]Second, register your inputs to create an instance. \t\t\t\t\t\t
-    [3]After that you can register your outputs and start/stop ofw"""
+    [2]\t\t\t\t\t\t\t\t\t\t\t\t
+    .....[a]Register your inputs to create an instance. \t\t\t\t\t\t
+    .....[b]Add an instance. It uses Excel for entering inputs and outputs. \t\t\t\t\t\t
+    [3]\t\t\t\t\t\t\t\t\t\t\t\t
+    .....[a]Afterwards, you can register your outputs and start/stop ofw. \t\t\t\t\t\t
+    .....[b]Start your instance.  \t\t\t\t\t\t
+    
+    Tip: Don't use the "=" for entering the commands, even though it is shown in the help. Use instead a whitespace.
+    """
     command_to_execute = {}
     parser = optparse.OptionParser(usage='Usage: %prog <options> <endpoint> arg1 arg2', version="%prog 1.0", description=desc)
     parser.add_option('-H', '--host', dest="Host", type="string", help="http host to connect to. Mandatory option.",
@@ -131,14 +138,14 @@ def parser():
     ###################     command             ############################################
     command_group = optparse.OptionGroup(parser, "Endpoint command")
 
-    command_group.add_option("--start", help="<filepath> <id>   starts the optimnization. If id is not present takes the last id used. Write all to start all instances", dest="start", metavar='<filepath> <id>',
+    command_group.add_option("--start", help="<filepath> <id>   starts the optimization. If id is not present takes the last id used. Write all to start all instances", dest="start", metavar='<filepath> <id>',
                              action="callback",callback=vararg_callback)
     command_group.add_option("--start_instance",
                              help="<model_name><instance_name>    starts the optimnization. If id is not present takes the last id used. Write all to start all instances",
                              dest="start_instance", metavar='<filepath> <id>',
                              action="callback", callback=vararg_callback)
     # command_group.add_option("--start",help="starts the optimnization",dest="start",metavar='<filepath> <id>', nargs=2, action="store")
-    command_group.add_option("--stop", help="<id or model_name><instance_name>  stops the optimnization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
+    command_group.add_option("--stop", help="<id or model_name><instance_name>  stops the optimization with a given id. If id is not present takes the last id used. Write all to stop all instances", dest="stop",
                              metavar='<id>', action="callback", callback=vararg_callback)
     command_group.add_option("--status", help="receives the status of the optimnization", dest="status", action="store_true")
 
@@ -187,7 +194,7 @@ def parser():
     ###################     Instance              ############################################
     instance_group = optparse.OptionGroup(parser, "Creating an instance")
 
-    instance_group.add_option("--instance_add", help="<model_name> <instance_name>   registers an instance linked to an optimization model. It will create a folder with the name \"instances\" and the name of your model and add a config file in there. Please configure that config file",
+    instance_group.add_option("--instance_add", help="registers an instance linked to an optimization model. It will create a folder with the name \"instances\" and the name of your model and add a config file in there. Please configure that config file",
                             dest="instance_add",metavar='<model_name> <instance_name>', nargs=2, action="store")
     instance_group.add_option("--instance_list", help="gets the instance names of a given model_name. Write all to have a list of all registered instances", dest="instance_list",
                               metavar='<model_name>', nargs=1, action="store")

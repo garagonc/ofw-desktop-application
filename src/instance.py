@@ -197,17 +197,28 @@ class Instance:
         models = Models()
         data = models.list(model_name,self.connection)
         data=data.decode("utf-8")
+        data_set = [x for x in data.split("\n") if "Set" in x]
+        data_param_1 = []
+        for item in data_set:
+            #logger.debug("item param " + str(item))
+            item = re.sub("=(.*)", "", item)
+            item = re.sub("model.", "", item)
+            item = re.sub("\s+\Z", "", item)
+            #logger.debug("item param " + str(item) + " type "+str(type(item)))
+            if not "#" in item and item != "T":
+                #logger.debug("item param " + str(item))
+                data_param_1.append(item)
+        #logger.debug("data param "+str(data_param_1))
         data_param = [x for x in data.split("\n") if "Param" in x]
-        data_param_1=[]
+        #data_param_1=[]
         for item in data_param:
-            #logger.debug("item param "+str(item))
-            if not "dT" in item:
-                item = re.sub("=(.*)", "", item)
-                item = re.sub("model.", "", item)
-                item = re.sub("\s+\Z", "", item)
-                if not "#" in item:
-                    data_param_1.append(item)
-
+            #logger.debug("item param "+str(item)
+            item = re.sub("=(.*)", "", item)
+            item = re.sub("model.", "", item)
+            item = re.sub("\s+\Z", "", item)
+            if not "#" in item and item != "dT":
+                data_param_1.append(item)
+        #logger.debug("data param " + str(data_param_1))
         data_var = [x for x in data.split("\n") if "Var" in x]
         data_var_1=[]
         for item in data_var:
